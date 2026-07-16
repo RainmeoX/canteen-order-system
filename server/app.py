@@ -100,7 +100,8 @@ def search_dish():
     if exact_match:
         return jsonify({'success': True, 'type': 'exact', 'dish': exact_match['name']})
     
-    cursor.execute('SELECT name FROM dishes WHERE name LIKE ? AND status = "上架"', (f'%{keyword}%',))
+    cursor.execute('SELECT name FROM dishes WHERE (name LIKE ? OR alias LIKE ?) AND status = "上架"', 
+                  (f'%{keyword}%', f'%{keyword}%'))
     fuzzy_matches = [row['name'] for row in cursor.fetchall()]
     
     if len(fuzzy_matches) == 0:
@@ -267,6 +268,9 @@ def add_dish():
     name = data.get('name')
     stock = data.get('stock', 0)
     limit_per_person = data.get('limit_per_person', 5)
+    nutrition_info = data.get('nutrition_info')
+    allergy_tag = data.get('allergy_tag')
+    alias = data.get('alias')
     
     if not admin_id or not name:
         return jsonify({'success': False, 'message': '缺少参数'}), 400
@@ -281,8 +285,8 @@ def add_dish():
         return jsonify({'success': False, 'message': '无权限执行此操作'}), 403
     
     try:
-        cursor.execute('INSERT INTO dishes (name, remaining, limit_per_person, status, initial_stock) VALUES (?, ?, ?, "上架", ?)',
-                      (name, stock, limit_per_person, stock))
+        cursor.execute('INSERT INTO dishes (name, remaining, limit_per_person, status, initial_stock, nutrition_info, allergy_tag, alias) VALUES (?, ?, ?, "上架", ?, ?, ?, ?)',
+                      (name, stock, limit_per_person, stock, nutrition_info, allergy_tag, alias))
         conn.commit()
         
         log_admin_action(admin_id, '上架', f'菜品: {name}, 库存: {stock}, 限购: {limit_per_person}')
@@ -577,6 +581,54 @@ def get_stats():
     
     return jsonify({'success': True, 'data': stats})
 
+@app.route('/api/admin/orders', methods=['GET'])
+def get_all_orders():
+    admin_id = request.args.get('admin_id')
+    status = request.args.get('status')
+    
+    if not admin_id:
+        return jsonify({'success': False, 'message': '缺少参数'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT role FROM users WHERE user_id = ?', (admin_id,))
+    admin = cursor.fetchone()
+    
+    if not admin or admin['role'] != 'admin':
+        return jsonify({'success': False, 'message': '无权限执行此操作'}), 403
+    
+    query = '''
+        SELECT o.id, o.user_id, o.dish_name, o.quantity, o.order_time, o.take_deadline, o.status, o.pickup_code, u.name as user_name
+        FROM orders o JOIN users u ON o.user_id = u.user_id
+        WHERE DATE(o.order_time) = DATE('now')
+    '''
+    params = []
+    
+    if status:
+        query += ' AND o.status = ?'
+        params.append(status)
+    
+    query += ' ORDER BY o.order_time DESC'
+    
+    cursor.execute(query, params)
+    
+    orders = []
+    for row in cursor.fetchall():
+        orders.append({
+            'order_id': row['id'],
+            'user_id': row['user_id'],
+            'user_name': row['user_name'],
+            'dish_name': row['dish_name'],
+            'quantity': row['quantity'],
+            'order_time': row['order_time'],
+            'take_deadline': row['take_deadline'],
+            'status': row['status'],
+            'pickup_code': row['pickup_code']
+        })
+    
+    return jsonify({'success': True, 'data': orders})
+
 @app.route('/api/admin/logs', methods=['GET'])
 def get_admin_logs():
     admin_id = request.args.get('admin_id')
@@ -610,6 +662,162 @@ def get_admin_logs():
         })
     
     return jsonify({'success': True, 'data': logs})
+
+@app.route('/api/process_overtime', methods=['POST'])
+def process_overtime_orders():
+    data = request.get_json()
+    admin_id = data.get('admin_id')
+    
+    if admin_id:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT role FROM users WHERE user_id = ?', (admin_id,))
+        admin = cursor.fetchone()
+        if not admin or admin['role'] != 'admin':
+            return jsonify({'success': False, 'message': '无权限执行此操作'}), 403
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    cursor.execute('SELECT * FROM orders WHERE status = "pending" AND take_deadline < ?', (current_time,))
+    overtime_orders = cursor.fetchall()
+    
+    if len(overtime_orders) == 0:
+        return jsonify({'success': True, 'message': '暂无超时订单'})
+    
+    try:
+        conn.execute('BEGIN')
+        
+        for order in overtime_orders:
+            cursor.execute('UPDATE orders SET status = "overtime" WHERE id = ?', (order['id'],))
+            cursor.execute('UPDATE dishes SET remaining = remaining + ? WHERE name = ?',
+                          (order['quantity'], order['dish_name']))
+        
+        conn.commit()
+        
+        return jsonify({'success': True, 'message': f'已处理 {len(overtime_orders)} 个超时订单，库存已释放'})
+    except Exception as e:
+        conn.execute('ROLLBACK')
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/user_orders/history', methods=['GET'])
+def get_user_order_history():
+    user_id = request.args.get('user_id')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    
+    if not user_id:
+        return jsonify({'success': False, 'message': '缺少参数'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    query = '''
+        SELECT o.id, o.dish_name, o.quantity, o.order_time, o.take_deadline, o.status, o.pickup_code
+        FROM orders o
+        WHERE o.user_id = ?
+    '''
+    params = [user_id]
+    
+    if start_date:
+        query += ' AND DATE(o.order_time) >= ?'
+        params.append(start_date)
+    
+    if end_date:
+        query += ' AND DATE(o.order_time) <= ?'
+        params.append(end_date)
+    
+    query += ' ORDER BY o.order_time DESC LIMIT 50'
+    
+    cursor.execute(query, params)
+    
+    orders = []
+    for row in cursor.fetchall():
+        orders.append({
+            'order_id': row['id'],
+            'dish_name': row['dish_name'],
+            'quantity': row['quantity'],
+            'order_time': row['order_time'],
+            'take_deadline': row['take_deadline'],
+            'status': row['status'],
+            'pickup_code': row['pickup_code']
+        })
+    
+    return jsonify({'success': True, 'data': orders})
+
+@app.route('/api/dietary_suggestion', methods=['GET'])
+def get_dietary_suggestion():
+    user_id = request.args.get('user_id')
+    
+    if not user_id:
+        return jsonify({'success': False, 'message': '缺少参数'}), 400
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT d.nutrition_info, d.allergy_tag, SUM(o.quantity) as total_qty
+        FROM orders o JOIN dishes d ON o.dish_name = d.name
+        WHERE o.user_id = ? AND DATE(o.order_time) = DATE('now')
+        GROUP BY o.dish_name
+    ''', (user_id,))
+    
+    today_orders = cursor.fetchall()
+    
+    suggestions = []
+    total_cal = 0
+    total_sugar = 0
+    
+    for row in today_orders:
+        nutrition_info = row['nutrition_info']
+        if nutrition_info:
+            try:
+                nutrition = eval(nutrition_info)
+                total_cal += nutrition.get('cal', 0) * row['total_qty']
+                total_sugar += nutrition.get('sugar', 0) * row['total_qty']
+            except:
+                pass
+    
+    if total_cal > 2000:
+        suggestions.append('今日热量摄入较高，建议选择清淡菜品')
+    elif total_cal < 1000:
+        suggestions.append('今日热量摄入偏低，建议适当增加主食')
+    
+    if total_sugar > 50:
+        suggestions.append('糖分摄入偏高，注意饮食均衡')
+    
+    cursor.execute('SELECT name, nutrition_info, allergy_tag FROM dishes WHERE status = "上架" ORDER BY RANDOM() LIMIT 3')
+    recommendations = []
+    for row in cursor.fetchall():
+        recommendations.append({
+            'name': row['name'],
+            'nutrition_info': row['nutrition_info'],
+            'allergy_tag': row['allergy_tag']
+        })
+    
+    return jsonify({
+        'success': True,
+        'data': {
+            'today_calories': total_cal,
+            'today_sugar': total_sugar,
+            'suggestions': suggestions if suggestions else ['今日饮食搭配合理'],
+            'recommendations': recommendations
+        }
+    })
+
+app.config['CLIENT_DIR'] = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client')
+app.static_folder = app.config['CLIENT_DIR']
+app.static_url_path = ''
+
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
+
+@app.route('/admin')
+def admin():
+    return app.send_static_file('admin.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

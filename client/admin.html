@@ -456,6 +456,12 @@
 
         <div id="order-tab" class="hidden">
             <div class="card">
+                <div class="card-title">超时订单处理</div>
+                <div id="overtime-message"></div>
+                <button class="btn btn-danger" onclick="processOvertimeOrders()">处理超时订单</button>
+            </div>
+
+            <div class="card">
                 <div class="card-title">订单核销</div>
                 <div id="verify-message"></div>
                 <div class="form-group">
@@ -550,7 +556,7 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:5000';
+        const API_BASE = '';
         const ADMIN_ID = 'admin_ma';
 
         function showTab(tab) {
@@ -846,45 +852,26 @@
         }
 
         async function loadOrders() {
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/stats?admin_id=${ADMIN_ID}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    const tbody = document.getElementById('order-table tbody');
-                    tbody.innerHTML = '';
-                    
-                    await loadAllOrders(tbody);
-                }
-            } catch (error) {
-                console.error('加载订单失败:', error);
-            }
-        }
-
-        async function loadAllOrders(tbody) {
+            const tbody = document.getElementById('order-table tbody');
             tbody.innerHTML = '<tr><td colspan="7" class="loading">加载中...</td></tr>';
             
             try {
-                const response = await fetch(`${API_BASE}/api/admin/stats?admin_id=${ADMIN_ID}`);
+                const response = await fetch(`${API_BASE}/api/admin/orders?admin_id=${ADMIN_ID}`);
                 const data = await response.json();
 
                 if (data.success) {
                     tbody.innerHTML = '';
-                    if (data.data.top_dishes.length === 0 && data.data.total_orders === 0) {
+                    
+                    if (data.data.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="7" class="loading">今日暂无订单</td></tr>';
                         return;
                     }
-                }
-                
-                const response2 = await fetch(`${API_BASE}/api/user_orders?user_id=admin_ma`);
-                const orderData = await response2.json();
-                
-                if (orderData.success && orderData.data.length > 0) {
-                    orderData.data.forEach(order => {
+                    
+                    data.data.forEach(order => {
                         tbody.innerHTML += `
                             <tr>
                                 <td>${order.order_id}</td>
-                                <td>-</td>
+                                <td>${order.user_name}</td>
                                 <td>${order.dish_name}</td>
                                 <td>${order.quantity}</td>
                                 <td>${order.order_time}</td>
@@ -898,8 +885,6 @@
                             </tr>
                         `;
                     });
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="7" class="loading">今日暂无订单</td></tr>';
                 }
             } catch (error) {
                 tbody.innerHTML = '<tr><td colspan="7" class="loading">加载失败</td></tr>';
@@ -976,6 +961,29 @@
                 }
             } catch (error) {
                 showMessage('config-message', '操作失败', 'error');
+            }
+        }
+
+        async function processOvertimeOrders() {
+            if (!confirm('确定要处理所有超时订单吗？超时订单将被标记为超时，库存将自动释放。')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/process_overtime`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_id: ADMIN_ID })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('overtime-message', data.message, 'success');
+                    loadOrders();
+                    loadStats();
+                } else {
+                    showMessage('overtime-message', data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('overtime-message', '操作失败', 'error');
             }
         }
 

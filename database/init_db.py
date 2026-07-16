@@ -31,7 +31,8 @@ def init_database():
             status TEXT DEFAULT '上架',
             initial_stock INTEGER,
             nutrition_info TEXT,
-            allergy_tag TEXT
+            allergy_tag TEXT,
+            alias TEXT
         )
     ''')
     
