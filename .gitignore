@@ -1,0 +1,8 @@
+database/*.db
+__pycache__/
+*.pyc
+.env
+.DS_Store
+.trae/
+.vscode/
+node_modules/
