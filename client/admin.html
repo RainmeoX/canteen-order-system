@@ -235,23 +235,38 @@
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
         }
-        
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            border-color: #667eea;
+        }
+
         .stat-card .number {
             font-size: 32px;
             font-weight: 700;
             margin-bottom: 5px;
         }
-        
+
         .stat-card .label {
             font-size: 14px;
             color: #666;
         }
-        
+
+        .stat-card .hint {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 6px;
+        }
+
         .stat-card.total .number { color: #3498db; }
         .stat-card.pending .number { color: #f39c12; }
         .stat-card.taken .number { color: #27ae60; }
-        
+
         .modal {
             display: none;
             position: fixed;
@@ -264,7 +279,7 @@
             align-items: center;
             z-index: 1000;
         }
-        
+
         .modal-content {
             background: white;
             border-radius: 12px;
@@ -273,12 +288,18 @@
             max-width: 400px;
             position: relative;
         }
-        
+
+        .modal-content.large {
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
         .modal-content h3 {
             margin-bottom: 20px;
             color: #333;
         }
-        
+
         .modal-close {
             position: absolute;
             top: 15px;
@@ -286,6 +307,92 @@
             font-size: 24px;
             cursor: pointer;
             color: #888;
+        }
+
+        .modal-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .modal-table th, .modal-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .modal-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .recent-orders-card, .dish-overview-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .recent-orders-card .card-title, .dish-overview-card .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .recent-orders-card .card-title a, .dish-overview-card .card-title a {
+            font-size: 13px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: normal;
+        }
+
+        .dish-stock-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .dish-stock-bar:last-child { border-bottom: none; }
+
+        .dish-stock-bar .name {
+            width: 120px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .dish-stock-bar .bar {
+            flex: 1;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .dish-stock-bar .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+        }
+
+        .dish-stock-bar .bar-fill.low { background: #e74c3c; }
+        .dish-stock-bar .bar-fill.mid { background: #f39c12; }
+
+        .dish-stock-bar .qty {
+            width: 60px;
+            text-align: right;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
         }
         
         .loading {
@@ -381,17 +488,40 @@
 
         <div id="dashboard-tab">
             <div class="stats-grid">
-                <div class="stat-card total">
+                <div class="stat-card total" onclick="showOrdersByStatus('')">
                     <div class="number" id="stat-total">0</div>
                     <div class="label">今日订单</div>
+                    <div class="hint">点击查看全部</div>
                 </div>
-                <div class="stat-card pending">
+                <div class="stat-card pending" onclick="showOrdersByStatus('pending')">
                     <div class="number" id="stat-pending">0</div>
                     <div class="label">待取餐</div>
+                    <div class="hint">点击查看详情</div>
                 </div>
-                <div class="stat-card taken">
+                <div class="stat-card taken" onclick="showOrdersByStatus('taken')">
                     <div class="number" id="stat-taken">0</div>
                     <div class="label">已取餐</div>
+                    <div class="hint">点击查看详情</div>
+                </div>
+            </div>
+
+            <div class="recent-orders-card">
+                <div class="card-title">
+                    <span>📋 最近订单</span>
+                    <a href="#" onclick="showTab('order'); return false;">查看全部 →</a>
+                </div>
+                <div id="recent-orders-container">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+
+            <div class="dish-overview-card">
+                <div class="card-title">
+                    <span>🍲 菜品库存概览</span>
+                    <a href="#" onclick="showTab('dish'); return false;">管理菜品 →</a>
+                </div>
+                <div id="dish-overview-container">
+                    <div class="loading">加载中...</div>
                 </div>
             </div>
 
@@ -555,6 +685,16 @@
         </div>
     </div>
 
+    <div class="modal" id="orders-modal">
+        <div class="modal-content large">
+            <span class="modal-close" onclick="closeOrdersModal()">&times;</span>
+            <h3 id="orders-modal-title">订单列表</h3>
+            <div id="orders-modal-body">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = '';
         const ADMIN_ID = 'admin';
@@ -623,6 +763,133 @@
             } catch (error) {
                 console.error('加载统计失败:', error);
             }
+
+            // 同时加载最近订单和菜品库存概览
+            loadRecentOrders();
+            loadDishOverview();
+        }
+
+        // 加载最近 5 条订单，显示在概览页
+        async function loadRecentOrders() {
+            const container = document.getElementById('recent-orders-container');
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/orders?admin_id=${ADMIN_ID}`);
+                const data = await response.json();
+                if (data.success) {
+                    const recent = data.data.slice(0, 5);
+                    if (recent.length === 0) {
+                        container.innerHTML = '<div class="loading">今日暂无订单</div>';
+                        return;
+                    }
+                    let html = '<table class="modal-table"><thead><tr><th>订单号</th><th>下单人</th><th>菜品</th><th>数量</th><th>时间</th><th>状态</th></tr></thead><tbody>';
+                    recent.forEach(o => {
+                        const time = o.order_time ? o.order_time.substring(11, 16) : '';
+                        html += `<tr>
+                            <td style="color:#667eea;font-weight:600">${o.order_id}</td>
+                            <td>${o.user_name}</td>
+                            <td>${o.dish_name}</td>
+                            <td>${o.quantity}</td>
+                            <td>${time}</td>
+                            <td><span class="status-badge ${o.status}">${getStatusText(o.status)}</span></td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div class="loading">加载失败</div>';
+                }
+            } catch (e) {
+                container.innerHTML = '<div class="loading">加载失败</div>';
+            }
+        }
+
+        // 加载菜品库存概览（带进度条）
+        async function loadDishOverview() {
+            const container = document.getElementById('dish-overview-container');
+            try {
+                const response = await fetch(`${API_BASE}/api/menu`);
+                const data = await response.json();
+                if (data.success) {
+                    if (data.data.length === 0) {
+                        container.innerHTML = '<div class="loading">暂无菜品</div>';
+                        return;
+                    }
+                    // 找最大库存作为进度条基准
+                    const maxStock = Math.max(...data.data.map(d => d.remaining), 1);
+                    let html = '';
+                    data.data.forEach(d => {
+                        const percent = Math.round(d.remaining / maxStock * 100);
+                        let barClass = '';
+                        if (d.remaining <= 5) barClass = 'low';
+                        else if (d.remaining <= 15) barClass = 'mid';
+                        html += `<div class="dish-stock-bar">
+                            <div class="name">${d.name}</div>
+                            <div class="bar"><div class="bar-fill ${barClass}" style="width:${percent}%"></div></div>
+                            <div class="qty">${d.remaining} 份</div>
+                        </div>`;
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div class="loading">加载失败</div>';
+                }
+            } catch (e) {
+                container.innerHTML = '<div class="loading">加载失败</div>';
+            }
+        }
+
+        // 点击统计卡片，弹出对应状态的订单列表
+        async function showOrdersByStatus(status) {
+            const modal = document.getElementById('orders-modal');
+            const title = document.getElementById('orders-modal-title');
+            const body = document.getElementById('orders-modal-body');
+
+            const titleMap = {
+                '': '今日全部订单',
+                'pending': '待取餐订单',
+                'taken': '已取餐订单'
+            };
+            title.textContent = titleMap[status] || '订单列表';
+            body.innerHTML = '<div class="loading">加载中...</div>';
+            modal.style.display = 'flex';
+
+            try {
+                let url = `${API_BASE}/api/admin/orders?admin_id=${ADMIN_ID}`;
+                if (status) url += `&status=${status}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.success) {
+                    if (data.data.length === 0) {
+                        body.innerHTML = '<div class="loading">暂无订单</div>';
+                        return;
+                    }
+                    let html = '<table class="modal-table"><thead><tr><th>订单号</th><th>下单人</th><th>工号</th><th>菜品</th><th>数量</th><th>下单时间</th><th>取餐截止</th><th>取餐码</th><th>状态</th></tr></thead><tbody>';
+                    data.data.forEach(o => {
+                        const orderTime = o.order_time ? o.order_time.substring(5, 16) : '';
+                        const deadline = o.take_deadline ? o.take_deadline.substring(5, 16) : '';
+                        html += `<tr>
+                            <td style="color:#667eea;font-weight:600">${o.order_id}</td>
+                            <td>${o.user_name}</td>
+                            <td>${o.user_id.replace('u_', '')}</td>
+                            <td>${o.dish_name}</td>
+                            <td>${o.quantity}</td>
+                            <td>${orderTime}</td>
+                            <td>${deadline}</td>
+                            <td style="font-weight:600;color:#e74c3c">${o.pickup_code}</td>
+                            <td><span class="status-badge ${o.status}">${getStatusText(o.status)}</span></td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    body.innerHTML = html;
+                } else {
+                    body.innerHTML = `<div class="loading">${data.message || '加载失败'}</div>`;
+                }
+            } catch (e) {
+                body.innerHTML = '<div class="loading">加载失败</div>';
+            }
+        }
+
+        function closeOrdersModal() {
+            document.getElementById('orders-modal').style.display = 'none';
         }
 
         async function addDish() {

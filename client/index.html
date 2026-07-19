@@ -744,7 +744,7 @@
                 item.className = 'order-item';
                 item.innerHTML = `
                     <div class="order-header">
-                        <span class="order-id">${order.order_id}</span>
+                        <span class="order-id">订单号：${order.order_id}</span>
                         <span class="status ${order.status}">${getStatusText(order.status)}</span>
                     </div>
                     <div class="details">菜品：${order.dish_name} × ${order.quantity}</div>
