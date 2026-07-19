@@ -191,22 +191,44 @@ def bind_user():
 
 @app.route('/api/menu', methods=['GET'])
 def get_menu():
-    """获取今日菜单：返回所有上架状态的菜品"""
+    """获取今日菜单：返回所有上架状态的菜品，支持按分类筛选"""
+    category = request.args.get('category')
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute(
-        'SELECT name, remaining, limit_per_person, nutrition_info, allergy_tag FROM dishes WHERE status = "上架"'
-    )
+    if category and category != '全部':
+        cursor.execute(
+            'SELECT name, category, price, remaining, limit_per_person, nutrition_info, allergy_tag, alias, description, image_emoji FROM dishes WHERE status = "上架" AND category = ? ORDER BY category, name',
+            (category,)
+        )
+    else:
+        cursor.execute(
+            'SELECT name, category, price, remaining, limit_per_person, nutrition_info, allergy_tag, alias, description, image_emoji FROM dishes WHERE status = "上架" ORDER BY category, name'
+        )
     dishes = []
     for row in cursor.fetchall():
         dishes.append({
             'name': row['name'],
+            'category': row['category'],
+            'price': row['price'],
             'remaining': row['remaining'],
             'limit_per_person': row['limit_per_person'],
             'nutrition_info': row['nutrition_info'],
-            'allergy_tag': row['allergy_tag']
+            'allergy_tag': row['allergy_tag'],
+            'alias': row['alias'],
+            'description': row['description'],
+            'image_emoji': row['image_emoji']
         })
     return jsonify({'success': True, 'data': dishes})
+
+
+@app.route('/api/categories', methods=['GET'])
+def get_categories():
+    """获取所有菜品分类"""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT DISTINCT category FROM dishes WHERE status = "上架" ORDER BY category')
+    cats = [row['category'] for row in cursor.fetchall()]
+    return jsonify({'success': True, 'data': cats})
 
 
 @app.route('/api/search_dish', methods=['GET'])
@@ -339,6 +361,96 @@ def place_order():
         return jsonify({'success': False, 'message': f' 库存刚刚被抢光，请重新下单'})
 
 
+@app.route('/api/order_batch', methods=['POST'])
+def order_batch():
+    """批量下单（购物车）：一次提交多个菜品"""
+    data = request.get_json()
+    user_id = data.get('user_id')
+    items = data.get('items', [])  # [{dish_name, quantity}, ...]
+    remark = data.get('remark', '')
+
+    if not user_id or not items:
+        return jsonify({'success': False, 'message': '缺少参数'}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # 验证用户
+    cursor.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
+    user = cursor.fetchone()
+    if not user or user['bind_status'] == 0:
+        return jsonify({'success': False, 'message': '您尚未登录'})
+
+    # 验证截止时间
+    cutoff_time = get_config('order_cutoff_time')
+    current_time = datetime.now().strftime('%H:%M')
+    if current_time > cutoff_time:
+        return jsonify({'success': False, 'message': f'下单已截止（每日{cutoff_time}）'})
+
+    try:
+        conn.execute('BEGIN')
+        order_ids = []
+        total_price = 0
+        take_end = get_config('take_end')
+        take_start = get_config('take_start')
+        take_deadline = f"{datetime.now().strftime('%Y-%m-%d')} {take_end}"
+
+        for item in items:
+            dish_name = item.get('dish_name')
+            quantity = item.get('quantity', 1)
+            if quantity <= 0:
+                continue
+
+            cursor.execute('SELECT * FROM dishes WHERE name = ? AND status = "上架"', (dish_name,))
+            dish = cursor.fetchone()
+            if not dish:
+                raise Exception(f'"{dish_name}" 未供应')
+
+            if dish['remaining'] < quantity:
+                raise Exception(f'"{dish_name}" 仅剩 {dish["remaining"]} 份')
+
+            # 限购检查
+            cursor.execute('''
+                SELECT COALESCE(SUM(quantity), 0) as total FROM orders
+                WHERE user_id = ? AND dish_name = ? AND status = 'pending' AND DATE(order_time) = DATE('now')
+            ''', (user_id, dish_name))
+            today_ordered = cursor.fetchone()['total']
+            if today_ordered + quantity > dish['limit_per_person']:
+                raise Exception(f'"{dish_name}" 每人限购 {dish["limit_per_person"]} 份')
+
+            # 扣库存
+            cursor.execute('UPDATE dishes SET remaining = remaining - ? WHERE name = ? AND remaining >= ?',
+                          (quantity, dish_name, quantity))
+            if cursor.rowcount == 0:
+                raise Exception(f'"{dish_name}" 库存被抢光')
+
+            # 生成订单号
+            cursor.execute('SELECT COUNT(*) as count FROM orders WHERE DATE(order_time) = DATE("now")')
+            order_count = cursor.fetchone()['count']
+            order_id = f"D{datetime.now().strftime('%Y%m%d')}{str(order_count + 1).zfill(4)}"
+            pickup_code = f"{user['employee_id'][-4:]}+{order_id[-3:]}"
+
+            cursor.execute('''
+                INSERT INTO orders (id, user_id, dish_name, quantity, order_time, take_deadline, status, pickup_code, remark, total_price)
+                VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?, ?, ?)
+            ''', (order_id, user_id, dish_name, quantity, take_deadline, pickup_code, remark, dish['price'] * quantity))
+
+            order_ids.append(order_id)
+            total_price += dish['price'] * quantity
+
+        conn.commit()
+        return jsonify({
+            'success': True,
+            'message': f'下单成功！共 {len(order_ids)} 个订单，合计 ¥{total_price:.2f}',
+            'order_ids': order_ids,
+            'total_price': total_price,
+            'take_time': f'{take_start}-{take_end}'
+        })
+    except Exception as e:
+        conn.execute('ROLLBACK')
+        return jsonify({'success': False, 'message': str(e)})
+
+
 @app.route('/api/user_orders', methods=['GET'])
 def get_user_orders():
     """查询用户今日订单"""
@@ -350,7 +462,7 @@ def get_user_orders():
     cursor = conn.cursor()
 
     cursor.execute('''
-        SELECT o.id, o.dish_name, o.quantity, o.order_time, o.take_deadline, o.status, o.pickup_code, u.name
+        SELECT o.id, o.dish_name, o.quantity, o.order_time, o.take_deadline, o.status, o.pickup_code, o.total_price, o.remark, u.name
         FROM orders o JOIN users u ON o.user_id = u.user_id
         WHERE o.user_id = ? AND DATE(o.order_time) = DATE('now')
         ORDER BY o.order_time DESC
@@ -365,7 +477,9 @@ def get_user_orders():
             'order_time': row['order_time'],
             'take_deadline': row['take_deadline'],
             'status': row['status'],
-            'pickup_code': row['pickup_code']
+            'pickup_code': row['pickup_code'],
+            'total_price': row['total_price'],
+            'remark': row['remark']
         })
 
     return jsonify({'success': True, 'data': orders})
@@ -523,11 +637,15 @@ def add_dish():
     data = request.get_json()
     admin_id = data.get('admin_id')
     name = data.get('name')
+    category = data.get('category', '热菜')
+    price = data.get('price', 0)
     stock = data.get('stock', 0)
     limit_per_person = data.get('limit_per_person', 5)
     nutrition_info = data.get('nutrition_info')
     allergy_tag = data.get('allergy_tag')
     alias = data.get('alias')
+    description = data.get('description', '')
+    image_emoji = data.get('image_emoji', '🍽️')
 
     if not admin_id or not name:
         return jsonify({'success': False, 'message': '缺少参数'}), 400
@@ -543,16 +661,16 @@ def add_dish():
 
     try:
         cursor.execute(
-            'INSERT INTO dishes (name, remaining, limit_per_person, status, initial_stock, nutrition_info, allergy_tag, alias) VALUES (?, ?, ?, "上架", ?, ?, ?, ?)',
-            (name, stock, limit_per_person, stock, nutrition_info, allergy_tag, alias)
+            'INSERT INTO dishes (name, category, price, remaining, limit_per_person, status, initial_stock, nutrition_info, allergy_tag, alias, description, image_emoji) VALUES (?, ?, ?, ?, ?, "上架", ?, ?, ?, ?, ?, ?)',
+            (name, category, price, stock, limit_per_person, stock, nutrition_info, allergy_tag, alias, description, image_emoji)
         )
         conn.commit()
 
-        log_admin_action(admin_id, '上架', f'菜品: {name}, 库存: {stock}, 限购: {limit_per_person}')
+        log_admin_action(admin_id, '上架', f'菜品: {name}, 分类: {category}, 价格: ¥{price}, 库存: {stock}')
 
-        return jsonify({'success': True, 'message': f'✅ "{name}" 上架成功'})
+        return jsonify({'success': True, 'message': f'"{name}" 上架成功'})
     except sqlite3.IntegrityError:
-        return jsonify({'success': False, 'message': f'❌ "{name}" 已存在'}), 409
+        return jsonify({'success': False, 'message': f'"{name}" 已存在'}), 409
 
 
 @app.route('/api/admin/remove_dish', methods=['POST'])
@@ -840,6 +958,10 @@ def get_stats():
     cursor.execute('SELECT COUNT(*) as cnt FROM orders WHERE DATE(order_time) = DATE("now") AND status = "taken"')
     taken_orders = cursor.fetchone()['cnt']
 
+    # 今日营业额（已取餐 + 待取餐，不含取消和超时）
+    cursor.execute('SELECT COALESCE(SUM(total_price), 0) as revenue FROM orders WHERE DATE(order_time) = DATE("now") AND status IN ("pending", "taken")')
+    today_revenue = cursor.fetchone()['revenue']
+
     # 热销菜品TOP5
     cursor.execute('''
         SELECT o.dish_name, SUM(o.quantity) as total_qty
@@ -863,6 +985,7 @@ def get_stats():
         'total_orders': total_orders,
         'pending_orders': pending_orders,
         'taken_orders': taken_orders,
+        'today_revenue': round(today_revenue, 2),
         'top_dishes': top_dishes,
         'low_stock': low_stock
     }
@@ -889,7 +1012,7 @@ def get_all_orders():
         return jsonify({'success': False, 'message': '无权限执行此操作'}), 403
 
     query = '''
-        SELECT o.id, o.user_id, o.dish_name, o.quantity, o.order_time, o.take_deadline, o.status, o.pickup_code, u.name as user_name
+        SELECT o.id, o.user_id, o.dish_name, o.quantity, o.order_time, o.take_deadline, o.status, o.pickup_code, o.total_price, o.remark, u.name as user_name, u.employee_id
         FROM orders o JOIN users u ON o.user_id = u.user_id
         WHERE DATE(o.order_time) = DATE('now')
     '''
@@ -909,12 +1032,15 @@ def get_all_orders():
             'order_id': row['id'],
             'user_id': row['user_id'],
             'user_name': row['user_name'],
+            'employee_id': row['employee_id'],
             'dish_name': row['dish_name'],
             'quantity': row['quantity'],
             'order_time': row['order_time'],
             'take_deadline': row['take_deadline'],
             'status': row['status'],
-            'pickup_code': row['pickup_code']
+            'pickup_code': row['pickup_code'],
+            'total_price': row['total_price'],
+            'remark': row['remark']
         })
 
     return jsonify({'success': True, 'data': orders})

@@ -2,28 +2,26 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>食堂预订系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>食堂预订</title>
     <style>
         :root {
             --bg: #ffffff;
-            --bg-soft: #f5f5f5;
+            --bg-soft: #f7f7f7;
             --bg-card: #ffffff;
-            --fg: #111111;
-            --fg-soft: #666666;
-            --fg-muted: #999999;
-            --border: #e5e5e5;
-            --border-soft: #f0f0f0;
-            --accent: #111111;
-            --accent-fg: #ffffff;
+            --fg: #1a1a1a;
+            --fg-soft: #666;
+            --fg-muted: #999;
+            --border: #eee;
+            --accent: #1a1a1a;
+            --accent-fg: #fff;
             --danger: #dc2626;
             --success: #16a34a;
-            --warning: #ca8a04;
-            --shadow: 0 1px 3px rgba(0,0,0,0.08);
-            --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
-            --radius: 10px;
+            --warning: #f59e0b;
+            --shadow: 0 2px 8px rgba(0,0,0,0.06);
+            --radius: 12px;
         }
-        * { margin:0; padding:0; box-sizing:border-box; }
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             background: var(--bg-soft);
@@ -32,641 +30,510 @@
             font-size: 14px;
             line-height: 1.5;
         }
-        .container { max-width: 900px; margin: 0 auto; padding: 16px; }
+        .app { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--bg-soft); position: relative; }
 
         /* 登录页 */
-        .bind-page {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .bind-card {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-lg);
-            padding: 40px 32px;
-            width: 100%;
-            max-width: 380px;
-        }
-        .bind-card .logo { text-align: center; margin-bottom: 28px; }
-        .bind-card .logo .icon {
-            width: 56px; height: 56px;
-            background: var(--accent);
-            color: var(--accent-fg);
-            border-radius: 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-        .bind-card .logo h1 { font-size: 20px; font-weight: 600; }
-        .bind-card .logo p { font-size: 13px; color: var(--fg-muted); margin-top: 4px; }
-
+        .login-page { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 30px; background: var(--bg); }
+        .login-logo { text-align: center; margin-bottom: 40px; }
+        .login-logo .icon { width: 72px; height: 72px; margin: 0 auto 16px; background: var(--accent); color: var(--accent-fg); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+        .login-logo h1 { font-size: 22px; font-weight: 700; }
+        .login-logo p { color: var(--fg-muted); font-size: 13px; margin-top: 6px; }
         .form-group { margin-bottom: 16px; }
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            color: var(--fg-soft);
-            margin-bottom: 6px;
-            font-weight: 500;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
-            background: var(--bg);
-            color: var(--fg);
-        }
-        .form-group input:focus { outline: none; border-color: var(--accent); }
-
-        .btn {
-            display: inline-block;
-            padding: 10px 18px;
-            background: var(--accent);
-            color: var(--accent-fg);
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .btn:hover { opacity: 0.85; }
-        .btn-block { width: 100%; padding: 12px; font-size: 15px; }
-        .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
-        .btn-danger { background: var(--danger); color: #fff; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
-
-        .message {
-            padding: 10px 14px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 13px;
-        }
-        .message.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
-        .message.error { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+        .form-group label { display: block; font-size: 13px; color: var(--fg-soft); margin-bottom: 6px; font-weight: 500; }
+        .form-group input { width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 15px; background: var(--bg-soft); transition: all .2s; }
+        .form-group input:focus { outline: none; border-color: var(--accent); background: var(--bg); }
+        .btn { width: 100%; padding: 14px; background: var(--accent); color: var(--accent-fg); border: none; border-radius: var(--radius); font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity .2s; }
+        .btn:active { opacity: 0.8; }
+        .btn:disabled { opacity: 0.5; }
+        .msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
+        .msg.error { background: #fef2f2; color: var(--danger); }
+        .msg.success { background: #f0fdf4; color: var(--success); }
 
         /* 主界面 */
-        .header {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .header h1 { font-size: 18px; font-weight: 600; }
-        .header p { font-size: 12px; color: var(--fg-muted); margin-top: 2px; }
-        .header .user-box { text-align: right; }
-        .header .user-box .name { font-weight: 600; font-size: 14px; }
-        .header .user-box .eid { font-size: 12px; color: var(--fg-muted); }
-        .header .user-box .logout {
-            font-size: 12px;
-            color: var(--fg-muted);
-            cursor: pointer;
-            margin-top: 4px;
-            text-decoration: underline;
-        }
+        .main { display: none; }
+        .main.active { display: block; }
+        .topbar { position: sticky; top: 0; z-index: 100; background: var(--bg); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+        .topbar .user { display: flex; align-items: center; gap: 10px; }
+        .topbar .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: var(--accent-fg); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
+        .topbar .user-info .name { font-size: 14px; font-weight: 600; }
+        .topbar .user-info .sub { font-size: 11px; color: var(--fg-muted); }
+        .topbar .logout { font-size: 12px; color: var(--fg-muted); cursor: pointer; padding: 6px 10px; }
+        .tabs { display: flex; background: var(--bg); border-bottom: 1px solid var(--border); position: sticky; top: 61px; z-index: 99; }
+        .tab { flex: 1; padding: 14px 0; text-align: center; font-size: 14px; color: var(--fg-soft); cursor: pointer; position: relative; font-weight: 500; }
+        .tab.active { color: var(--fg); font-weight: 600; }
+        .tab.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 24px; height: 3px; background: var(--accent); border-radius: 2px; }
 
-        .tabs {
-            display: flex;
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-        .tab {
-            flex: 1;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            font-size: 14px;
-            color: var(--fg-soft);
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-        }
-        .tab.active { color: var(--fg); border-bottom-color: var(--accent); font-weight: 600; }
+        /* 菜单页 */
+        .search-bar { padding: 12px 16px; background: var(--bg); position: sticky; top: 105px; z-index: 98; }
+        .search-bar input { width: 100%; padding: 10px 16px; background: var(--bg-soft); border: none; border-radius: 20px; font-size: 14px; }
+        .search-bar input:focus { outline: none; }
+        .category-bar { display: flex; gap: 8px; padding: 0 16px 12px; overflow-x: auto; background: var(--bg); }
+        .category-bar::-webkit-scrollbar { display: none; }
+        .cat-item { padding: 6px 14px; background: var(--bg-soft); border-radius: 16px; font-size: 13px; white-space: nowrap; cursor: pointer; color: var(--fg-soft); }
+        .cat-item.active { background: var(--accent); color: var(--accent-fg); }
+        .menu-list { padding: 12px 16px 100px; }
+        .dish-card { background: var(--bg-card); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; display: flex; gap: 12px; box-shadow: var(--shadow); }
+        .dish-card .emoji { width: 64px; height: 64px; border-radius: 10px; background: var(--bg-soft); display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0; }
+        .dish-card .info { flex: 1; min-width: 0; }
+        .dish-card .name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .dish-card .desc { font-size: 12px; color: var(--fg-muted); margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dish-card .tags { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+        .dish-card .tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--bg-soft); color: var(--fg-soft); }
+        .dish-card .tag.allergy { background: #fef2f2; color: var(--danger); }
+        .dish-card .bottom { display: flex; align-items: center; justify-content: space-between; }
+        .dish-card .price { font-size: 16px; font-weight: 700; color: var(--danger); }
+        .dish-card .price small { font-size: 12px; font-weight: 400; }
+        .dish-card .stock { font-size: 11px; color: var(--fg-muted); }
+        .dish-card .stock.low { color: var(--danger); }
+        .add-btn { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-fg); border: none; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .add-btn:disabled { background: var(--border); cursor: not-allowed; }
+        .qty-control { display: flex; align-items: center; gap: 8px; }
+        .qty-control button { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--accent); background: var(--bg); color: var(--accent); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .qty-control span { font-size: 14px; font-weight: 600; min-width: 20px; text-align: center; }
 
-        .card {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow);
-        }
-        .card-title {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-soft);
-        }
+        /* 购物车浮窗 */
+        .cart-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; background: var(--bg); border-top: 1px solid var(--border); padding: 12px 16px; display: none; align-items: center; justify-content: space-between; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+        .cart-bar.active { display: flex; }
+        .cart-bar .left { display: flex; align-items: center; gap: 10px; }
+        .cart-bar .cart-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: var(--accent-fg); display: flex; align-items: center; justify-content: center; font-size: 20px; position: relative; }
+        .cart-bar .cart-icon .badge { position: absolute; top: -4px; right: -4px; background: var(--danger); color: #fff; font-size: 10px; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+        .cart-bar .total { font-size: 18px; font-weight: 700; }
+        .cart-bar .total small { font-size: 12px; color: var(--fg-muted); font-weight: 400; }
+        .cart-bar .submit { padding: 12px 24px; background: var(--accent); color: var(--accent-fg); border: none; border-radius: 24px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .cart-bar .submit:disabled { opacity: 0.4; }
 
-        .search-bar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        .search-bar input {
-            flex: 1;
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
-        }
+        /* 订单页 */
+        .order-list { padding: 12px 16px 100px; }
+        .order-card { background: var(--bg-card); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; box-shadow: var(--shadow); }
+        .order-card .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--border); }
+        .order-card .oid { font-size: 13px; font-weight: 600; color: var(--fg-soft); }
+        .order-card .status { font-size: 12px; padding: 3px 10px; border-radius: 12px; font-weight: 500; }
+        .order-card .status.pending { background: #fffbeb; color: var(--warning); }
+        .order-card .status.taken { background: #f0fdf4; color: var(--success); }
+        .order-card .status.cancelled { background: #fef2f2; color: var(--danger); }
+        .order-card .status.overtime { background: #f5f5f5; color: var(--fg-muted); }
+        .order-card .dish-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+        .order-card .dish-row .qty { color: var(--fg-muted); }
+        .order-card .foot { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--fg-muted); }
+        .order-card .pickup { color: var(--danger); font-weight: 600; font-size: 14px; }
+        .order-card .price { font-size: 16px; font-weight: 700; color: var(--fg); }
 
-        .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 12px;
-        }
-        .menu-item {
-            border: 1px solid var(--border-soft);
-            border-radius: 8px;
-            padding: 14px;
-            transition: box-shadow 0.2s;
-        }
-        .menu-item:hover { box-shadow: var(--shadow); }
-        .menu-item .name { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-        .menu-item .stock { font-size: 12px; color: var(--fg-soft); margin-bottom: 4px; }
-        .menu-item .stock.low { color: var(--danger); font-weight: 600; }
-        .menu-item .meta { font-size: 11px; color: var(--fg-muted); margin-bottom: 4px; }
-        .menu-item .actions { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
-        .menu-item .qty {
-            width: 50px;
-            padding: 4px 8px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 13px;
-            text-align: center;
-        }
+        .empty { text-align: center; padding: 60px 20px; color: var(--fg-muted); }
+        .empty .icon { font-size: 48px; margin-bottom: 12px; }
 
-        .order-item {
-            border: 1px solid var(--border-soft);
-            border-radius: 8px;
-            padding: 14px;
-            margin-bottom: 10px;
-        }
-        .order-item .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        .order-item .order-id { font-size: 14px; font-weight: 600; color: var(--accent); }
-        .order-item .details { font-size: 13px; color: var(--fg-soft); margin-bottom: 4px; }
-        .order-item .pickup-code {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--danger);
-            margin-top: 8px;
-            padding: 8px 12px;
-            background: var(--bg-soft);
-            border-radius: 6px;
-        }
-        .status-badge {
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-        .status-badge.pending { background: #fef3c7; color: #92400e; }
-        .status-badge.taken { background: #d1fae5; color: #065f46; }
-        .status-badge.cancelled { background: #fee2e2; color: #991b1b; }
-        .status-badge.overtime { background: #f3f4f6; color: #6b7280; }
+        /* 历史订单 */
+        .date-filter { display: flex; gap: 8px; padding: 12px 16px; background: var(--bg); }
+        .date-filter input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+        .date-filter button { padding: 8px 16px; background: var(--accent); color: var(--accent-fg); border: none; border-radius: 8px; font-size: 13px; cursor: pointer; }
 
-        .loading { text-align: center; padding: 30px; color: var(--fg-muted); font-size: 13px; }
-        .hidden { display: none !important; }
+        /* 健康建议 */
+        .health-card { background: var(--bg-card); border-radius: var(--radius); padding: 16px; margin: 12px 16px; box-shadow: var(--shadow); }
+        .health-card h3 { font-size: 15px; margin-bottom: 12px; }
+        .health-card .cal-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .health-card .cal-bar .label { width: 60px; font-size: 13px; color: var(--fg-soft); }
+        .health-card .cal-bar .bar { flex: 1; height: 8px; background: var(--bg-soft); border-radius: 4px; overflow: hidden; }
+        .health-card .cal-bar .fill { height: 100%; background: var(--accent); border-radius: 4px; }
+        .health-card .cal-bar .val { width: 60px; text-align: right; font-size: 13px; font-weight: 600; }
+        .suggestion { padding: 10px 12px; background: #fffbeb; border-radius: 8px; font-size: 13px; color: var(--warning); margin-top: 8px; }
+        .recommend-list { display: flex; gap: 10px; overflow-x: auto; margin-top: 12px; }
+        .recommend-list::-webkit-scrollbar { display: none; }
+        .recommend-item { min-width: 100px; padding: 10px; background: var(--bg-soft); border-radius: 8px; text-align: center; }
+        .recommend-item .emoji { font-size: 28px; }
+        .recommend-item .name { font-size: 12px; margin-top: 4px; }
 
-        .suggestion-item {
-            padding: 10px 12px;
-            background: var(--bg-soft);
-            border-radius: 6px;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
+        /* 模态框 */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg); border-radius: 16px; width: 100%; max-width: 400px; padding: 24px; max-height: 80vh; overflow-y: auto; }
+        .modal h3 { font-size: 18px; margin-bottom: 16px; text-align: center; }
+        .modal .close { text-align: center; margin-top: 16px; }
+        .modal .close button { padding: 12px 40px; background: var(--accent); color: var(--accent-fg); border: none; border-radius: 24px; font-size: 14px; cursor: pointer; }
+        .success-icon { text-align: center; font-size: 48px; margin-bottom: 12px; }
+        .success-info { background: var(--bg-soft); border-radius: 12px; padding: 16px; margin: 16px 0; }
+        .success-info .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+        .success-info .row .val { font-weight: 600; }
+        .success-info .pickup { color: var(--danger); font-size: 20px; font-weight: 700; text-align: center; padding: 12px; background: var(--bg); border-radius: 8px; margin-top: 8px; letter-spacing: 2px; }
 
-        .reminder-overlay {
-            display: none;
-            position: fixed;
-            top:0; left:0; right:0; bottom:0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .reminder-overlay.show { display: flex; }
-        .reminder-modal {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 24px;
-            max-width: 360px;
-            width: 100%;
-            position: relative;
-        }
-        .reminder-modal h3 { margin-bottom: 12px; }
-        .reminder-modal .close-btn {
-            position: absolute;
-            top: 12px; right: 16px;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--fg-muted);
-        }
-
-        @media (max-width: 600px) {
-            .menu-grid { grid-template-columns: 1fr; }
-            .header { flex-direction: column; gap: 10px; align-items: flex-start; }
-            .header .user-box { text-align: left; }
-            .tabs { flex-wrap: wrap; }
-            .tab { flex: 1 1 50%; }
+        /* 响应式：桌面端 */
+        @media (min-width: 768px) {
+            .app { max-width: 480px; box-shadow: 0 0 40px rgba(0,0,0,0.08); }
         }
     </style>
 </head>
 <body>
-
-<!-- 登录页 -->
-<div id="bind-section" class="bind-page">
-    <div class="bind-card">
-        <div class="logo">
-            <div class="icon">食</div>
-            <h1>食堂预订系统</h1>
-            <p>在线预订，轻松取餐</p>
+<div class="app">
+    <!-- 登录页 -->
+    <div id="login-page" class="login-page">
+        <div class="login-logo">
+            <div class="icon">🍽️</div>
+            <h1>食堂预订</h1>
+            <p>在线点餐 · 轻松取餐</p>
         </div>
-        <div id="bind-message"></div>
+        <div id="login-msg"></div>
         <div class="form-group">
             <label>姓名</label>
-            <input type="text" id="bind-name" placeholder="请输入姓名">
+            <input type="text" id="login-name" placeholder="请输入姓名">
         </div>
         <div class="form-group">
             <label>工号</label>
-            <input type="text" id="bind-employee-id" placeholder="请输入工号">
+            <input type="text" id="login-empid" placeholder="请输入工号">
         </div>
-        <button class="btn btn-block" onclick="bindUser()">登录</button>
+        <button class="btn" onclick="doLogin()">登 录</button>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="main" class="main">
+        <div class="topbar">
+            <div class="user">
+                <div class="avatar" id="user-avatar">张</div>
+                <div class="user-info">
+                    <div class="name" id="user-name">张三</div>
+                    <div class="sub" id="user-empid">工号: 1001</div>
+                </div>
+            </div>
+            <div class="logout" onclick="logout()">退出</div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('menu')">菜单</div>
+            <div class="tab" onclick="switchTab('orders')">订单</div>
+            <div class="tab" onclick="switchTab('history')">历史</div>
+            <div class="tab" onclick="switchTab('health')">健康</div>
+        </div>
+
+        <!-- 菜单 -->
+        <div id="tab-menu">
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="🔍 搜索菜品..." oninput="onSearch()">
+            </div>
+            <div class="category-bar" id="category-bar"></div>
+            <div class="menu-list" id="menu-list"></div>
+        </div>
+
+        <!-- 订单 -->
+        <div id="tab-orders" style="display:none">
+            <div class="order-list" id="order-list"></div>
+        </div>
+
+        <!-- 历史 -->
+        <div id="tab-history" style="display:none">
+            <div class="date-filter">
+                <input type="date" id="hist-start">
+                <input type="date" id="hist-end">
+                <button onclick="loadHistory()">查询</button>
+            </div>
+            <div class="order-list" id="history-list"></div>
+        </div>
+
+        <!-- 健康 -->
+        <div id="tab-health" style="display:none">
+            <div id="health-content"></div>
+        </div>
+    </div>
+
+    <!-- 购物车 -->
+    <div class="cart-bar" id="cart-bar">
+        <div class="left">
+            <div class="cart-icon">🛒<span class="badge" id="cart-count">0</span></div>
+            <div class="total">¥<span id="cart-total">0</span><br><small id="cart-items-text">未选购商品</small></div>
+        </div>
+        <button class="submit" onclick="submitCart()">选好了</button>
     </div>
 </div>
 
-<!-- 主界面 -->
-<div id="main-section" class="container hidden">
-    <div class="header">
-        <div>
-            <h1>食堂预订系统</h1>
-            <p>在线预订，轻松取餐</p>
-        </div>
-        <div class="user-box">
-            <div class="name" id="user-name"></div>
-            <div class="eid" id="user-employee-id"></div>
-            <div class="logout" onclick="logout()">退出登录</div>
-        </div>
-    </div>
-
-    <div class="tabs">
-        <div class="tab active" onclick="switchTab('menu')">今日菜单</div>
-        <div class="tab" onclick="switchTab('order')">我的订单</div>
-        <div class="tab" onclick="switchTab('history')">历史订单</div>
-        <div class="tab" onclick="switchTab('health')">饮食建议</div>
-    </div>
-
-    <div id="menu-tab">
-        <div class="card">
-            <div class="search-bar">
-                <input type="text" id="search-input" placeholder="搜索菜品..." onkeyup="searchDish()">
-                <button class="btn" onclick="searchDish()">搜索</button>
-                <button class="btn btn-outline" onclick="loadMenu()">刷新</button>
-            </div>
-            <div id="search-results"></div>
-        </div>
-        <div id="menu-container" class="menu-grid"></div>
-        <div id="menu-loading" class="loading">加载中...</div>
-    </div>
-
-    <div id="order-tab" class="hidden">
-        <div class="card">
-            <div class="card-title">今日订单</div>
-            <div id="order-loading" class="loading">加载中...</div>
-            <div id="order-container"></div>
-        </div>
-    </div>
-
-    <div id="history-tab" class="hidden">
-        <div class="card">
-            <div class="card-title">历史订单</div>
-            <div class="search-bar">
-                <input type="date" id="history-start">
-                <input type="date" id="history-end">
-                <button class="btn" onclick="loadOrderHistory()">查询</button>
-            </div>
-            <div id="history-loading" class="loading hidden">加载中...</div>
-            <div id="history-container"></div>
-        </div>
-    </div>
-
-    <div id="health-tab" class="hidden">
-        <div class="card">
-            <div class="card-title">健康饮食建议</div>
-            <button class="btn" onclick="loadDietarySuggestion()">获取建议</button>
-            <div id="suggestion-container" style="margin-top:16px"></div>
-            <div id="suggestion-loading" class="loading hidden">加载中...</div>
-        </div>
-    </div>
-</div>
-
-<div id="reminder-overlay" class="reminder-overlay" onclick="closeReminder()">
-    <div class="reminder-modal" onclick="event.stopPropagation()">
-        <span class="close-btn" onclick="closeReminder()">×</span>
-        <h3>取餐提醒</h3>
-        <div id="reminder-content"></div>
+<!-- 下单成功模态框 -->
+<div class="modal-overlay" id="success-modal">
+    <div class="modal">
+        <div class="success-icon">✅</div>
+        <h3>下单成功</h3>
+        <div id="success-detail"></div>
+        <div class="close"><button onclick="closeSuccessModal()">知道了</button></div>
     </div>
 </div>
 
 <script>
-    const API_BASE = '';
-    let currentUserId = null, currentUserName = null, currentEmployeeId = null, currentMenu = [];
+    const API = '';
+    let currentUser = null;
+    let menuData = [];
+    let cart = {};  // {dish_name: quantity}
+    let currentCategory = '全部';
 
-    function showMessage(elementId, message, type) {
-        const el = document.getElementById(elementId);
-        if (!el) return;
-        el.innerHTML = `<div class="message ${type}">${message}</div>`;
-        setTimeout(() => { el.innerHTML = ''; }, 3000);
+    function $(id) { return document.getElementById(id); }
+
+    function showMsg(el, msg, type) {
+        el.innerHTML = `<div class="msg ${type}">${msg}</div>`;
+        setTimeout(() => el.innerHTML = '', 3000);
     }
 
-    function getStatusText(status) {
-        return {'pending':'待取餐','taken':'已取餐','cancelled':'已取消','overtime':'超时未取'}[status] || status;
-    }
-
-    async function bindUser() {
-        const name = document.getElementById('bind-name').value.trim();
-        const employeeId = document.getElementById('bind-employee-id').value.trim();
-        if (!name || !employeeId) { showMessage('bind-message','请填写姓名和工号','error'); return; }
-        const userId = 'u_' + employeeId;
+    // ===== 登录 =====
+    async function doLogin() {
+        const name = $('login-name').value.trim();
+        const empid = $('login-empid').value.trim();
+        if (!name || !empid) { showMsg($('login-msg'), '请填写姓名和工号', 'error'); return; }
         try {
-            const resp = await fetch(`${API_BASE}/api/bind`, {
-                method:'POST', headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({user_id:userId, name, employee_id:employeeId})
+            const r = await fetch(`${API}/api/bind`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({user_id: 'u_'+empid, name, employee_id: empid})
             });
-            const data = await resp.json();
-            if (data.success) {
-                localStorage.setItem('canteen_user_id', userId);
-                localStorage.setItem('canteen_user_name', name);
-                localStorage.setItem('canteen_employee_id', employeeId);
-                login(userId, name, employeeId);
-            } else { showMessage('bind-message', data.message, 'error'); }
-        } catch (e) { showMessage('bind-message','网络错误，请检查服务是否启动','error'); }
+            const d = await r.json();
+            if (d.success) {
+                currentUser = {user_id: 'u_'+empid, name, employee_id: empid};
+                localStorage.setItem('canteen_user', JSON.stringify(currentUser));
+                enterMain();
+            } else { showMsg($('login-msg'), d.message, 'error'); }
+        } catch (e) { showMsg($('login-msg'), '网络错误', 'error'); }
     }
 
-    function login(userId, name, employeeId) {
-        currentUserId = userId;
-        currentUserName = name;
-        currentEmployeeId = employeeId;
-        document.getElementById('user-name').textContent = name;
-        document.getElementById('user-employee-id').textContent = '工号：' + employeeId;
-        document.getElementById('bind-section').classList.add('hidden');
-        document.getElementById('main-section').classList.remove('hidden');
+    function enterMain() {
+        $('login-page').style.display = 'none';
+        $('main').classList.add('active');
+        $('user-name').textContent = currentUser.name;
+        $('user-empid').textContent = '工号: ' + currentUser.employee_id;
+        $('user-avatar').textContent = currentUser.name.charAt(0);
         loadMenu();
-        checkPickupReminder();
-        setInterval(checkPickupReminder, 60000);
+        loadCategories();
     }
 
     function logout() {
-        localStorage.removeItem('canteen_user_id');
-        localStorage.removeItem('canteen_user_name');
-        localStorage.removeItem('canteen_employee_id');
-        currentUserId = null;
-        document.getElementById('bind-section').classList.remove('hidden');
-        document.getElementById('main-section').classList.add('hidden');
-        document.getElementById('bind-name').value = '';
-        document.getElementById('bind-employee-id').value = '';
+        localStorage.removeItem('canteen_user');
+        currentUser = null;
+        cart = {};
+        $('main').classList.remove('active');
+        $('login-page').style.display = 'flex';
+        $('login-name').value = '';
+        $('login-empid').value = '';
     }
 
-    function switchTab(tab) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
-        ['menu','order','history','health'].forEach(t => document.getElementById(`${t}-tab`).classList.add('hidden'));
-        document.getElementById(`${tab}-tab`).classList.remove('hidden');
-        if (tab === 'order') loadOrders();
-        if (tab === 'health') loadDietarySuggestion();
-    }
-
-    async function loadMenu() {
-        document.getElementById('menu-loading').classList.remove('hidden');
-        document.getElementById('menu-container').innerHTML = '';
-        document.getElementById('search-results').innerHTML = '';
+    // ===== 分类 =====
+    async function loadCategories() {
         try {
-            const resp = await fetch(`${API_BASE}/api/menu`);
-            const data = await resp.json();
-            if (data.success) { currentMenu = data.data; renderMenu(currentMenu); }
-        } catch (e) {
-            document.getElementById('menu-container').innerHTML = '<div class="loading">加载失败，请稍后重试</div>';
-        }
-        document.getElementById('menu-loading').classList.add('hidden');
-    }
-
-    function renderMenu(dishes) {
-        const container = document.getElementById('menu-container');
-        container.innerHTML = '';
-        if (dishes.length === 0) { container.innerHTML = '<div class="loading">暂无菜品</div>'; return; }
-        dishes.forEach(d => {
-            const stockClass = d.remaining <= 5 ? 'low' : '';
-            let nutrition = '';
-            try {
-                if (d.nutrition_info) {
-                    const n = JSON.parse(d.nutrition_info);
-                    nutrition = `热量 ${n.cal}kcal · 糖 ${n.sugar}g`;
-                }
-            } catch(e) {}
-            const item = document.createElement('div');
-            item.className = 'menu-item';
-            item.innerHTML = `
-                <div class="name">${d.name}</div>
-                <div class="stock ${stockClass}">库存：${d.remaining} 份 · 限购 ${d.limit_per_person}</div>
-                ${nutrition ? `<div class="meta">${nutrition}</div>` : ''}
-                ${d.allergy_tag ? `<div class="meta" style="color:var(--danger)">过敏：${d.allergy_tag}</div>` : ''}
-                <div class="actions">
-                    <input type="number" class="qty" id="qty-${d.name}" value="1" min="1" max="${d.limit_per_person}">
-                    <button class="btn btn-sm" onclick="placeOrder('${d.name}')">下单</button>
-                </div>`;
-            container.appendChild(item);
-        });
-    }
-
-    async function searchDish() {
-        const keyword = document.getElementById('search-input').value.trim();
-        if (!keyword) { document.getElementById('search-results').innerHTML = ''; loadMenu(); return; }
-        try {
-            const resp = await fetch(`${API_BASE}/api/search_dish?keyword=${encodeURIComponent(keyword)}`);
-            const data = await resp.json();
-            const results = document.getElementById('search-results');
-            if (data.success && data.type === 'single') {
-                results.innerHTML = `<div class="message success">找到：${data.dish.name}（库存 ${data.dish.remaining}）</div>`;
-                renderMenu([data.dish]);
-            } else {
-                results.innerHTML = `<div class="message error">${data.message || '未找到'}</div>`;
-            }
-        } catch (e) { showMessage('search-results','搜索失败','error'); }
-    }
-
-    async function placeOrder(dishName) {
-        if (!currentUserId) { alert('请先登录'); return; }
-        const qty = parseInt(document.getElementById(`qty-${dishName}`).value) || 1;
-        try {
-            const resp = await fetch(`${API_BASE}/api/order`, {
-                method:'POST', headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({user_id:currentUserId, dish_name:dishName, quantity:qty})
-            });
-            const data = await resp.json();
-            if (data.success) {
-                alert(data.message);
-                loadMenu();
-            } else {
-                alert(data.message);
-            }
-        } catch (e) { alert('下单失败'); }
-    }
-
-    async function loadOrders() {
-        if (!currentUserId) return;
-        document.getElementById('order-loading').classList.remove('hidden');
-        document.getElementById('order-container').innerHTML = '';
-        try {
-            const resp = await fetch(`${API_BASE}/api/user_orders?user_id=${currentUserId}`);
-            const data = await resp.json();
-            if (data.success) renderOrders(data.data);
-        } catch (e) {
-            document.getElementById('order-container').innerHTML = '<div class="loading">加载失败</div>';
-        }
-        document.getElementById('order-loading').classList.add('hidden');
-    }
-
-    function renderOrders(orders) {
-        const container = document.getElementById('order-container');
-        container.innerHTML = '';
-        if (orders.length === 0) { container.innerHTML = '<div class="loading">暂无订单</div>'; return; }
-        orders.forEach(o => {
-            const item = document.createElement('div');
-            item.className = 'order-item';
-            item.innerHTML = `
-                <div class="order-header">
-                    <span class="order-id">订单号：${o.order_id}</span>
-                    <span class="status-badge ${o.status}">${getStatusText(o.status)}</span>
-                </div>
-                <div class="details">菜品：${o.dish_name} × ${o.quantity}</div>
-                <div class="details">下单时间：${o.order_time}</div>
-                <div class="details">取餐截止：${o.take_deadline}</div>
-                ${o.status === 'pending' ? `<div class="pickup-code">取餐凭证：${o.pickup_code}</div>` : ''}
-            `;
-            container.appendChild(item);
-        });
-    }
-
-    async function loadOrderHistory() {
-        if (!currentUserId) return;
-        const startDate = document.getElementById('history-start').value;
-        const endDate = document.getElementById('history-end').value;
-        document.getElementById('history-loading').classList.remove('hidden');
-        document.getElementById('history-container').innerHTML = '';
-        try {
-            let url = `${API_BASE}/api/user_orders/history?user_id=${currentUserId}`;
-            if (startDate) url += `&start_date=${startDate}`;
-            if (endDate) url += `&end_date=${endDate}`;
-            const resp = await fetch(url);
-            const data = await resp.json();
-            if (data.success) {
-                const container = document.getElementById('history-container');
-                if (data.data.length === 0) {
-                    container.innerHTML = '<div class="loading">暂无历史订单</div>';
-                } else {
-                    data.data.forEach(o => {
-                        const item = document.createElement('div');
-                        item.className = 'order-item';
-                        item.innerHTML = `
-                            <div class="order-header">
-                                <span class="order-id">订单号：${o.order_id}</span>
-                                <span class="status-badge ${o.status}">${getStatusText(o.status)}</span>
-                            </div>
-                            <div class="details">菜品：${o.dish_name} × ${o.quantity}</div>
-                            <div class="details">下单时间：${o.order_time}</div>`;
-                        container.appendChild(item);
-                    });
-                }
-            }
-        } catch (e) {
-            document.getElementById('history-container').innerHTML = '<div class="loading">加载失败</div>';
-        }
-        document.getElementById('history-loading').classList.add('hidden');
-    }
-
-    async function loadDietarySuggestion() {
-        if (!currentUserId) return;
-        document.getElementById('suggestion-loading').classList.remove('hidden');
-        document.getElementById('suggestion-container').innerHTML = '';
-        try {
-            const resp = await fetch(`${API_BASE}/api/dietary_suggestion?user_id=${currentUserId}`);
-            const data = await resp.json();
-            if (data.success) {
-                const container = document.getElementById('suggestion-container');
-                let html = '';
-                if (data.data.today_calories || data.data.today_sugar) {
-                    html += `<div class="suggestion-item">今日摄入：${data.data.today_calories} kcal · 糖 ${data.data.today_sugar}g</div>`;
-                }
-                data.data.suggestions.forEach(s => {
-                    html += `<div class="suggestion-item">${s}</div>`;
+            const r = await fetch(`${API}/api/categories`);
+            const d = await r.json();
+            if (d.success) {
+                const bar = $('category-bar');
+                let html = `<div class="cat-item active" onclick="selectCategory('全部', this)">全部</div>`;
+                d.data.forEach(c => {
+                    html += `<div class="cat-item" onclick="selectCategory('${c}', this)">${c}</div>`;
                 });
-                if (data.data.recommendations.length > 0) {
-                    html += '<div class="card-title" style="margin-top:12px">推荐菜品</div>';
-                    data.data.recommendations.forEach(d => {
-                        html += `<div class="suggestion-item">${d.name}</div>`;
-                    });
-                }
-                container.innerHTML = html || '<div class="loading">暂无建议</div>';
-            }
-        } catch (e) {
-            document.getElementById('suggestion-container').innerHTML = '<div class="loading">加载失败</div>';
-        }
-        document.getElementById('suggestion-loading').classList.add('hidden');
-    }
-
-    async function checkPickupReminder() {
-        if (!currentUserId) return;
-        try {
-            const resp = await fetch(`${API_BASE}/api/user_orders?user_id=${currentUserId}`);
-            const data = await resp.json();
-            if (data.success) {
-                const pending = data.data.filter(o => o.status === 'pending');
-                if (pending.length > 0) {
-                    const now = new Date();
-                    pending.forEach(o => {
-                        const deadline = new Date(o.take_deadline);
-                        const diff = (deadline - now) / 60000;
-                        if (diff > 0 && diff < 30) {
-                            document.getElementById('reminder-content').innerHTML = `
-                                <p>您有 ${pending.length} 个待取餐订单</p>
-                                <p style="margin-top:8px;color:var(--danger)">订单 ${o.order_id} 即将到取餐截止时间！</p>
-                                <p style="margin-top:8px">取餐码：${o.pickup_code}</p>`;
-                            document.getElementById('reminder-overlay').classList.add('show');
-                        }
-                    });
-                }
+                bar.innerHTML = html;
             }
         } catch (e) {}
     }
 
-    function closeReminder() { document.getElementById('reminder-overlay').classList.remove('show'); }
+    function selectCategory(cat, el) {
+        currentCategory = cat;
+        document.querySelectorAll('.cat-item').forEach(e => e.classList.remove('active'));
+        el.classList.add('active');
+        renderMenu();
+    }
 
+    // ===== 菜单 =====
+    async function loadMenu() {
+        try {
+            const r = await fetch(`${API}/api/menu`);
+            const d = await r.json();
+            if (d.success) { menuData = d.data; renderMenu(); }
+        } catch (e) {}
+    }
+
+    function renderMenu() {
+        const list = $('menu-list');
+        const keyword = $('search-input').value.trim().toLowerCase();
+        let items = menuData;
+        if (currentCategory !== '全部') items = items.filter(d => d.category === currentCategory);
+        if (keyword) items = items.filter(d => d.name.toLowerCase().includes(keyword) || (d.alias||'').toLowerCase().includes(keyword));
+
+        if (items.length === 0) { list.innerHTML = '<div class="empty"><div class="icon">🍽️</div>暂无菜品</div>'; return; }
+
+        list.innerHTML = items.map(d => {
+            const inCart = cart[d.name] || 0;
+            const stockLow = d.remaining <= 5;
+            const soldOut = d.remaining <= 0;
+            const tags = [];
+            if (d.category) tags.push(`<span class="tag">${d.category}</span>`);
+            if (d.allergy_tag) tags.push(`<span class="tag allergy">过敏: ${d.allergy_tag}</span>`);
+            return `<div class="dish-card">
+                <div class="emoji">${d.image_emoji||'🍽️'}</div>
+                <div class="info">
+                    <div class="name">${d.name}</div>
+                    <div class="desc">${d.description||''}</div>
+                    <div class="tags">${tags.join('')}</div>
+                    <div class="bottom">
+                        <div>
+                            <div class="price">¥${d.price}<small>/${d.limit_per_person}份限购</small></div>
+                            <div class="stock ${stockLow?'low':''}">剩余 ${d.remaining} 份</div>
+                        </div>
+                        ${soldOut ? '<button class="add-btn" disabled>售罄</button>' :
+                          inCart > 0 ? `<div class="qty-control"><button onclick="changeQty('${d.name}',-1)">−</button><span>${inCart}</span><button onclick="changeQty('${d.name}',1)">+</button></div>` :
+                          `<button class="add-btn" onclick="changeQty('${d.name}',1)">+</button>`}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function onSearch() { renderMenu(); }
+
+    function changeQty(name, delta) {
+        const dish = menuData.find(d => d.name === name);
+        if (!dish) return;
+        const cur = cart[name] || 0;
+        const next = cur + delta;
+        if (next < 0) return;
+        if (next > dish.limit_per_person) { alert(`每人限购 ${dish.limit_per_person} 份`); return; }
+        if (next > dish.remaining) { alert('库存不足'); return; }
+        if (next === 0) delete cart[name];
+        else cart[name] = next;
+        renderMenu();
+        updateCartBar();
+    }
+
+    function updateCartBar() {
+        const count = Object.values(cart).reduce((a,b)=>a+b, 0);
+        const total = Object.entries(cart).reduce((sum, [name, qty]) => {
+            const d = menuData.find(x => x.name === name);
+            return sum + (d ? d.price * qty : 0);
+        }, 0);
+        if (count > 0) {
+            $('cart-bar').classList.add('active');
+            $('cart-count').textContent = count;
+            $('cart-total').textContent = total.toFixed(2);
+            $('cart-items-text').textContent = `${count} 件商品`;
+        } else {
+            $('cart-bar').classList.remove('active');
+        }
+    }
+
+    // ===== 下单 =====
+    async function submitCart() {
+        const items = Object.entries(cart).map(([name, qty]) => ({dish_name: name, quantity: qty}));
+        if (items.length === 0) return;
+        try {
+            const r = await fetch(`${API}/api/order_batch`, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({user_id: currentUser.user_id, items})
+            });
+            const d = await r.json();
+            if (d.success) {
+                cart = {};
+                updateCartBar();
+                renderMenu();
+                showSuccessModal(d);
+            } else {
+                alert(d.message);
+            }
+        } catch (e) { alert('网络错误'); }
+    }
+
+    function showSuccessModal(data) {
+        $('success-detail').innerHTML = `
+            <div class="success-info">
+                <div class="row"><span>订单数</span><span class="val">${data.order_ids.length} 个</span></div>
+                <div class="row"><span>合计金额</span><span class="val">¥${data.total_price.toFixed(2)}</span></div>
+                <div class="row"><span>取餐时间</span><span class="val">今日 ${data.take_time}</span></div>
+                <div class="row"><span>取餐地点</span><span class="val">食堂一楼大厅</span></div>
+                <div class="pickup">${data.order_ids[0].slice(-3)}</div>
+                <div style="text-align:center;font-size:12px;color:var(--fg-muted);margin-top:4px">取餐码尾号</div>
+            </div>`;
+        $('success-modal').classList.add('active');
+    }
+
+    function closeSuccessModal() {
+        $('success-modal').classList.remove('active');
+        switchTab('orders');
+    }
+
+    // ===== 订单 =====
+    async function loadOrders() {
+        try {
+            const r = await fetch(`${API}/api/user_orders?user_id=${currentUser.user_id}`);
+            const d = await r.json();
+            if (d.success) renderOrders(d.data, 'order-list');
+        } catch (e) {}
+    }
+
+    function renderOrders(orders, container) {
+        const list = $(container);
+        if (orders.length === 0) { list.innerHTML = '<div class="empty"><div class="icon">📋</div>暂无订单</div>'; return; }
+        const statusMap = {pending:'待取餐', taken:'已取餐', cancelled:'已取消', overtime:'超时未取'};
+        list.innerHTML = orders.map(o => `
+            <div class="order-card">
+                <div class="head">
+                    <span class="oid">${o.order_id}</span>
+                    <span class="status ${o.status}">${statusMap[o.status]||o.status}</span>
+                </div>
+                <div class="dish-row"><span>${o.dish_name}</span><span class="qty">×${o.quantity}</span></div>
+                ${o.remark ? `<div style="font-size:12px;color:var(--fg-muted);margin-top:4px">备注: ${o.remark}</div>` : ''}
+                <div class="foot">
+                    <span>${o.order_time ? o.order_time.substring(5,16) : ''}</span>
+                    ${o.total_price ? `<span class="price">¥${o.total_price.toFixed(2)}</span>` : ''}
+                </div>
+                ${o.status === 'pending' ? `<div class="foot"><span>取餐截止: ${o.take_deadline ? o.take_deadline.substring(5,16) : ''}</span><span class="pickup">${o.pickup_code}</span></div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    // ===== 历史 =====
+    async function loadHistory() {
+        const start = $('hist-start').value;
+        const end = $('hist-end').value;
+        let url = `${API}/api/user_orders/history?user_id=${currentUser.user_id}`;
+        if (start) url += `&start_date=${start}`;
+        if (end) url += `&end_date=${end}`;
+        try {
+            const r = await fetch(url);
+            const d = await r.json();
+            if (d.success) renderOrders(d.data, 'history-list');
+        } catch (e) {}
+    }
+
+    // ===== 健康 =====
+    async function loadHealth() {
+        try {
+            const r = await fetch(`${API}/api/dietary_suggestion?user_id=${currentUser.user_id}`);
+            const d = await r.json();
+            if (d.success) {
+                const data = d.data;
+                const calPercent = Math.min(data.today_calories / 2000 * 100, 100);
+                const sugarPercent = Math.min(data.today_sugar / 50 * 100, 100);
+                let html = `<div class="health-card">
+                    <h3>📊 今日营养摄入</h3>
+                    <div class="cal-bar"><div class="label">热量</div><div class="bar"><div class="fill" style="width:${calPercent}%"></div></div><div class="val">${data.today_calories} kcal</div></div>
+                    <div class="cal-bar"><div class="label">糖分</div><div class="bar"><div class="fill" style="width:${sugarPercent}%"></div></div><div class="val">${data.today_sugar} g</div></div>`;
+                if (data.suggestions && data.suggestions.length > 0) {
+                    html += data.suggestions.map(s => `<div class="suggestion">💡 ${s}</div>`).join('');
+                }
+                if (data.recommendations && data.recommendations.length > 0) {
+                    html += `<h3 style="margin-top:16px">🍽️ 推荐菜品</h3><div class="recommend-list">`;
+                    html += data.recommendations.map(r => `<div class="recommend-item"><div class="emoji">${r.image_emoji||'🍽️'}</div><div class="name">${r.name}</div></div>`).join('');
+                    html += `</div>`;
+                }
+                html += `</div>`;
+                $('health-content').innerHTML = html;
+            }
+        } catch (e) {}
+    }
+
+    // ===== Tab 切换 =====
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        ['menu','orders','history','health'].forEach(t => {
+            $('tab-'+t).style.display = t === tab ? 'block' : 'none';
+        });
+        if (tab === 'orders') loadOrders();
+        if (tab === 'history') loadHistory();
+        if (tab === 'health') loadHealth();
+        // 购物车只在菜单页显示
+        $('cart-bar').style.display = tab === 'menu' ? '' : 'none';
+    }
+
+    // ===== 启动 =====
     window.addEventListener('DOMContentLoaded', () => {
-        const savedUserId = localStorage.getItem('canteen_user_id');
-        const savedUserName = localStorage.getItem('canteen_user_name');
-        const savedEmployeeId = localStorage.getItem('canteen_employee_id');
-        if (savedUserId && savedUserName && savedEmployeeId) {
-            login(savedUserId, savedUserName, savedEmployeeId);
+        const saved = localStorage.getItem('canteen_user');
+        if (saved) {
+            currentUser = JSON.parse(saved);
+            enterMain();
         }
     });
 </script>
