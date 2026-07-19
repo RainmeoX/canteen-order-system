@@ -74,6 +74,80 @@ def log_admin_action(admin_id, action, detail):
     )
     conn.commit()
 
+
+def check_admin_bind(admin_id):
+    """检查管理员是否已绑定信息，返回 (admin_row, error_response)"""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE user_id = ? AND role = "admin"', (admin_id,))
+    admin = cursor.fetchone()
+    if not admin:
+        return None, jsonify({'success': False, 'message': '管理员账号不存在', 'need_bind': False}), 403
+    if admin['bind_status'] == 0 or not admin['name']:
+        return admin, jsonify({'success': False, 'message': '管理员尚未绑定信息', 'need_bind': True}), 403
+    return admin, None
+
+
+# ============ 管理员绑定/信息 API ============
+
+@app.route('/api/admin/bind', methods=['POST'])
+def bind_admin():
+    """管理员首次绑定：设置姓名和工号"""
+    data = request.get_json()
+    admin_id = data.get('admin_id')
+    name = data.get('name')
+    employee_id = data.get('employee_id')
+
+    if not admin_id or not name or not employee_id:
+        return jsonify({'success': False, 'message': '缺少参数'}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE user_id = ? AND role = "admin"', (admin_id,))
+    admin = cursor.fetchone()
+    if not admin:
+        return jsonify({'success': False, 'message': '管理员账号不存在'}), 404
+
+    # 检查工号是否已被其他用户占用
+    cursor.execute('SELECT user_id FROM users WHERE employee_id = ? AND user_id != ?', (employee_id, admin_id))
+    if cursor.fetchone():
+        return jsonify({'success': False, 'message': '该工号已被占用'}), 400
+
+    cursor.execute(
+        'UPDATE users SET name = ?, employee_id = ?, bind_status = 1 WHERE user_id = ?',
+        (name, employee_id, admin_id)
+    )
+    conn.commit()
+    log_admin_action(admin_id, '管理员绑定', f'姓名: {name}, 工号: {employee_id}')
+    return jsonify({'success': True, 'message': f'绑定成功！欢迎管理员 {name}'})
+
+
+@app.route('/api/admin/info', methods=['GET'])
+def admin_info():
+    """获取管理员信息（是否已绑定、姓名）"""
+    admin_id = request.args.get('admin_id')
+    if not admin_id:
+        return jsonify({'success': False, 'message': '缺少参数'}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE user_id = ? AND role = "admin"', (admin_id,))
+    admin = cursor.fetchone()
+    if not admin:
+        return jsonify({'success': False, 'message': '管理员账号不存在', 'need_bind': False}), 404
+
+    return jsonify({
+        'success': True,
+        'data': {
+            'admin_id': admin['user_id'],
+            'name': admin['name'],
+            'employee_id': admin['employee_id'],
+            'bind_status': admin['bind_status'],
+            'need_bind': admin['bind_status'] == 0 or not admin['name']
+        }
+    })
+
+
 # ============ 用户端 API ============
 
 @app.route('/api/bind', methods=['POST'])

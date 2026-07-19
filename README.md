@@ -1,6 +1,6 @@
 # 智能食堂预订系统
 
-基于 Flask + SQLite + Web 的三层架构智能食堂预订系统。
+基于 Flask + SQLite + Web 的三层架构智能食堂预订系统，支持手机和电脑双端访问，黑白极简主题。
 
 ## 项目结构
 
@@ -13,8 +13,8 @@ canteen-order-system/
 │   ├── app.py              # Flask 后端服务
 │   └── requirements.txt
 ├── client/
-│   ├── index.html          # 用户端页面
-│   └── admin.html          # 管理端页面
+│   ├── index.html          # 用户端页面（响应式）
+│   └── admin.html          # 管理端页面（响应式）
 ├── start.bat               # Windows 一键启动
 ├── start.sh                # Linux/Mac 一键启动
 └── README.md
@@ -24,15 +24,13 @@ canteen-order-system/
 
 - 后端: Python 3.8+ / Flask 3.1 / Flask-CORS
 - 数据库: SQLite (WAL 模式)
-- 前端: HTML5 + CSS3 + 原生 JavaScript
+- 前端: HTML5 + CSS3 + 原生 JavaScript（响应式，支持手机/电脑）
 
 ## 快速开始
 
 ### Windows
 ```bash
-# 双击 start.bat 即可
-# 或命令行执行
-start.bat
+.\start.bat
 ```
 
 ### Linux / Mac
@@ -42,13 +40,8 @@ start.bat
 
 ### 手动启动
 ```bash
-# 1. 安装依赖
 pip install flask flask-cors
-
-# 2. 初始化数据库（首次必须执行，会创建表 + 示例菜品 + 管理员）
 python database/init_db.py
-
-# 3. 启动服务
 python server/app.py
 ```
 
@@ -56,29 +49,30 @@ python server/app.py
 - 用户端: http://localhost:5000
 - 管理端: http://localhost:5000/admin
 
-## 默认账号
+## 账号说明
 
 | 角色 | 入口 | 登录方式 |
 |------|------|---------|
-| 管理员 | http://localhost:5000/admin | ID 固定为 `admin`（马静），前端已内置 |
-| 普通用户 | http://localhost:5000 | 输入「姓名 + 工号」即可登录，系统会自动用工号生成 user_id |
+| 管理员 | http://localhost:5000/admin | 账号固定 `admin`，首次进入需绑定姓名+工号 |
+| 普通用户 | http://localhost:5000 | 输入「姓名 + 工号」即可登录 |
 
 ## 功能特性
 
-### 用户端
+### 用户端（手机/电脑自适应）
 - 用户登录（姓名 + 工号）
-- 查看今日菜单（含营养信息、过敏标签）
+- 查看今日菜单（卡片式布局，含营养信息、过敏标签）
 - 菜品搜索（支持菜名 + 别名模糊匹配）
 - 在线下单（自动校验截止时间、库存、限购）
 - 查询今日订单 / 历史订单（订单号醒目显示）
-- 健康饮食建议（基于今日订单统计热量糖分）
+- 健康饮食建议
 - 取餐提醒
 
-### 管理端
+### 管理端（手机/电脑自适应）
+- **管理员首次绑定**（不再写死姓名，进入时绑定）
 - **数据概览**（可交互）
-  - 今日订单 / 待取餐 / 已取餐 三个统计卡片，**点击可弹出对应订单详情**
-  - 最近订单列表（直接展示最近 5 条，含下单人、菜品、状态）
-  - 菜品库存概览（进度条可视化，低库存红色预警）
+  - 今日订单 / 待取餐 / 已取餐 三个统计卡片，点击弹出对应订单详情
+  - 最近订单列表
+  - 菜品库存概览（进度条可视化）
   - 热销菜品 TOP 5
   - 低库存预警
 - 菜品管理（上架 / 下架 / 改库存 / 补货 / 改限购）
@@ -88,6 +82,12 @@ python server/app.py
 - 超时订单处理
 
 ## API 接口
+
+### 管理员
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/admin/bind` | POST | 管理员首次绑定 |
+| `/api/admin/info` | GET | 获取管理员信息 |
 
 ### 用户端
 | 接口 | 方法 | 说明 |
@@ -112,21 +112,21 @@ python server/app.py
 | `/api/admin/update_take_time` | POST | 修改取餐时段 |
 | `/api/admin/cancel_order` | POST | 取消订单 |
 | `/api/admin/stats` | GET | 数据统计 |
-| `/api/admin/orders` | GET | 订单列表 |
+| `/api/admin/orders` | GET | 订单列表（支持 status 筛选） |
 | `/api/admin/logs` | GET | 操作日志 |
 | `/api/verify_order` | POST | 核销订单 |
 | `/api/process_overtime` | POST | 处理超时订单 |
 
 ## 常见问题
 
+**Q: 管理端首次进入显示绑定页？**
+A: 管理员账号 `admin` 首次使用需要绑定姓名和工号，绑定后自动进入管理界面。
+
 **Q: 管理端所有操作都提示"无权限"？**
-A: 数据库未初始化。请先执行 `python database/init_db.py`，会自动创建管理员 `admin`。
+A: 数据库未初始化。请先执行 `python database/init_db.py`。
 
 **Q: 用户下单提示"下单已截止"？**
-A: 默认截止时间是每日 10:00。请在管理端「系统配置」修改截止时间，或测试时改成 23:59。
-
-**Q: 启动报错 `ModuleNotFoundError: No module named 'flask'`？**
-A: 执行 `pip install flask flask-cors` 安装依赖。
+A: 默认截止时间是每日 10:00。请在管理端「系统配置」修改截止时间。
 
 **Q: 想重置数据库？**
 A: 删除 `database/canteen.db` 文件，再执行 `python database/init_db.py`。

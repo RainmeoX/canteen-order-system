@@ -116,10 +116,10 @@ def init_database():
         INSERT OR IGNORE INTO system_config (config_key, value) VALUES ('take_end', '12:30')
     ''')
 
-    # 默认管理员账户
+    # 默认管理员账户（仅创建 user_id='admin'，姓名和工号需要首次绑定）
     cursor.execute('''
         INSERT OR IGNORE INTO users (user_id, name, employee_id, role, bind_status)
-        VALUES ('admin', '马静', '0001', 'admin', 1)
+        VALUES ('admin', '', '', 'admin', 0)
     ''')
 
     # ============ 示例菜品数据 ============

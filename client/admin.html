@@ -3,629 +3,579 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智能食堂预订系统 - 管理端</title>
+    <title>食堂预订系统 · 管理端</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #ffffff;
+            --bg-soft: #f5f5f5;
+            --bg-card: #ffffff;
+            --fg: #111111;
+            --fg-soft: #666666;
+            --fg-muted: #999999;
+            --border: #e5e5e5;
+            --border-soft: #f0f0f0;
+            --accent: #111111;
+            --accent-fg: #ffffff;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --warning: #ca8a04;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+            --radius: 10px;
+            --sidebar-w: 220px;
         }
-        
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-soft);
+            color: var(--fg);
             min-height: 100vh;
-        }
-        
-        .sidebar {
-            width: 250px;
-            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            min-height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            padding: 20px;
-        }
-        
-        .sidebar h2 {
-            font-size: 20px;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .sidebar-nav {
-            list-style: none;
-        }
-        
-        .sidebar-nav li {
-            margin-bottom: 10px;
-        }
-        
-        .sidebar-nav li a {
-            display: block;
-            padding: 12px 15px;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.3s;
             font-size: 14px;
+            line-height: 1.5;
         }
-        
-        .sidebar-nav li a:hover, .sidebar-nav li a.active {
-            background: rgba(255,255,255,0.2);
-        }
-        
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-        }
-        
-        .header {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+
+        /* ===== 绑定/登录页 ===== */
+        .bind-page {
+            min-height: 100vh;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-        }
-        
-        .header h1 {
-            color: #333;
-            font-size: 22px;
-        }
-        
-        .header .admin-info {
-            font-size: 14px;
-            color: #666;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 12px;
+            justify-content: center;
+            background: var(--bg-soft);
             padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        
-        .card-title {
-            font-size: 16px;
+        .bind-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 40px 32px;
+            width: 100%;
+            max-width: 380px;
+        }
+        .bind-card .logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .bind-card .logo .icon {
+            width: 56px;
+            height: 56px;
+            background: var(--accent);
+            color: var(--accent-fg);
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .bind-card .logo h1 {
+            font-size: 20px;
             font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
+            color: var(--fg);
         }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
+        .bind-card .logo p {
+            font-size: 13px;
+            color: var(--fg-muted);
+            margin-top: 4px;
         }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
+        .form-group { margin-bottom: 16px; }
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: 500;
             font-size: 13px;
+            color: var(--fg-soft);
+            margin-bottom: 6px;
+            font-weight: 500;
         }
-        
         .form-group input, .form-group select {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
             font-size: 14px;
-            transition: border-color 0.3s;
+            background: var(--bg);
+            color: var(--fg);
+            transition: border-color 0.2s;
         }
-        
-        .form-group input:focus, .form-group select:focus {
+        .form-group input:focus {
             outline: none;
-            border-color: #3498db;
+            border-color: var(--accent);
         }
-        
         .btn {
-            background: #3498db;
-            color: white;
+            display: inline-block;
+            padding: 10px 18px;
+            background: var(--accent);
+            color: var(--accent-fg);
             border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: opacity 0.2s;
+            text-decoration: none;
         }
-        
-        .btn:hover {
-            background: #2980b9;
-            transform: translateY(-1px);
+        .btn:hover { opacity: 0.85; }
+        .btn-block { width: 100%; padding: 12px; font-size: 15px; }
+        .btn-outline {
+            background: transparent;
+            color: var(--fg);
+            border: 1px solid var(--border);
         }
-        
-        .btn-danger {
-            background: #e74c3c;
-        }
-        
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-        
-        .btn-success {
-            background: #27ae60;
-        }
-        
-        .btn-success:hover {
-            background: #2ecc71;
-        }
-        
-        .btn-secondary {
-            background: #ecf0f1;
-            color: #666;
-        }
-        
-        .btn-secondary:hover {
-            background: #bdc3c7;
-        }
-        
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-        
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
         .message {
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-        
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        
-        table th, table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 14px;
-        }
-        
-        table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #555;
-        }
-        
-        table tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 2px solid transparent;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-            border-color: #667eea;
-        }
-
-        .stat-card .number {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .stat-card .label {
-            font-size: 14px;
-            color: #666;
-        }
-
-        .stat-card .hint {
-            font-size: 11px;
-            color: #aaa;
-            margin-top: 6px;
-        }
-
-        .stat-card.total .number { color: #3498db; }
-        .stat-card.pending .number { color: #f39c12; }
-        .stat-card.taken .number { color: #27ae60; }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            width: 90%;
-            max-width: 400px;
-            position: relative;
-        }
-
-        .modal-content.large {
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-content h3 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 24px;
-            cursor: pointer;
-            color: #888;
-        }
-
-        .modal-table {
-            width: 100%;
-            border-collapse: collapse;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
             font-size: 13px;
         }
+        .message.success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+        .message.error { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
 
-        .modal-table th, .modal-table td {
-            padding: 8px 10px;
-            text-align: left;
-            border-bottom: 1px solid #f0f0f0;
+        /* ===== 主布局 ===== */
+        .layout { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--accent);
+            color: var(--accent-fg);
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            padding: 24px 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: transform 0.3s;
+        }
+        .sidebar .brand {
+            padding: 0 24px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 16px;
+        }
+        .sidebar .brand .icon {
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .sidebar .brand h2 { font-size: 15px; font-weight: 600; }
+        .sidebar .brand p { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+
+        .sidebar-nav { list-style: none; flex: 1; }
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-nav li a:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .sidebar-nav li a.active {
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+            border-left-color: #fff;
+        }
+        .sidebar-nav li a .ico { font-size: 16px; width: 20px; text-align: center; }
+
+        .sidebar .footer {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 12px;
+        }
+        .sidebar .footer .admin-name { color: #fff; font-weight: 500; margin-bottom: 4px; }
+        .sidebar .footer .logout {
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .sidebar .footer .logout:hover { color: #fff; }
+
+        .main {
+            flex: 1;
+            margin-left: var(--sidebar-w);
+            padding: 24px;
         }
 
-        .modal-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #333;
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        .topbar h1 { font-size: 22px; font-weight: 600; }
+        .topbar .menu-btn {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 18px;
         }
 
-        .recent-orders-card, .dish-overview-card {
-            background: white;
-            border-radius: 12px;
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-
-        .recent-orders-card .card-title, .dish-overview-card .card-title {
-            font-size: 16px;
+        .card-title {
+            font-size: 15px;
             font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-soft);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
-        .recent-orders-card .card-title a, .dish-overview-card .card-title a {
-            font-size: 13px;
-            color: #667eea;
+        .card-title a {
+            font-size: 12px;
+            color: var(--fg-soft);
             text-decoration: none;
             font-weight: normal;
         }
 
-        .dish-stock-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid #f5f5f5;
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
         }
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent);
+        }
+        .stat-card .number { font-size: 32px; font-weight: 700; color: var(--fg); }
+        .stat-card .label { font-size: 13px; color: var(--fg-soft); margin-top: 4px; }
+        .stat-card .hint { font-size: 11px; color: var(--fg-muted); margin-top: 8px; }
 
-        .dish-stock-bar:last-child { border-bottom: none; }
+        /* 表格 */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-soft); }
+        th { background: var(--bg-soft); font-weight: 600; color: var(--fg-soft); font-size: 12px; }
+        tr:hover { background: var(--bg-soft); }
 
-        .dish-stock-bar .name {
-            width: 120px;
-            font-size: 14px;
-            color: #333;
-        }
-
-        .dish-stock-bar .bar {
-            flex: 1;
-            height: 8px;
-            background: #f0f0f0;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .dish-stock-bar .bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            border-radius: 4px;
-        }
-
-        .dish-stock-bar .bar-fill.low { background: #e74c3c; }
-        .dish-stock-bar .bar-fill.mid { background: #f39c12; }
-
-        .dish-stock-bar .qty {
-            width: 60px;
-            text-align: right;
-            font-size: 13px;
-            font-weight: 600;
-            color: #666;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 30px;
-            color: #888;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
         .status-badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
             font-weight: 500;
         }
-        
-        .status-badge.pending { background: #fff3cd; color: #856404; }
-        .status-badge.taken { background: #d4edda; color: #155724; }
-        .status-badge.cancelled { background: #f8d7da; color: #721c24; }
-        .status-badge.overtime { background: #f8d7da; color: #721c24; }
-        
+        .status-badge.pending { background: #fef3c7; color: #92400e; }
+        .status-badge.taken { background: #d1fae5; color: #065f46; }
+        .status-badge.cancelled { background: #fee2e2; color: #991b1b; }
+        .status-badge.overtime { background: #f3f4f6; color: #6b7280; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
         .search-bar {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 8px;
+            margin-bottom: 12px;
         }
-        
         .search-bar input {
             flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
         }
-        
-        .menu-item {
+
+        .dish-list { display: grid; gap: 12px; }
+        .dish-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
-            border: 1px solid #f0f0f0;
+            padding: 14px;
+            border: 1px solid var(--border-soft);
             border-radius: 8px;
-            margin-bottom: 10px;
         }
-        
-        .menu-item .info {
-            flex: 1;
+        .dish-item .info .name { font-weight: 600; margin-bottom: 4px; }
+        .dish-item .info .meta { font-size: 12px; color: var(--fg-muted); }
+        .dish-item .actions { display: flex; gap: 6px; }
+        .low-stock { color: var(--danger); font-weight: 600; }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
         }
-        
-        .menu-item .info .name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 4px;
+        .modal.show { display: flex; }
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            width: 100%;
+            max-width: 420px;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
         }
-        
-        .menu-item .info .meta {
-            font-size: 13px;
-            color: #888;
+        .modal-content.large { max-width: 800px; }
+        .modal-close {
+            position: absolute;
+            top: 12px; right: 16px;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--fg-muted);
+            line-height: 1;
         }
-        
-        .menu-item .actions {
+        .modal-content h3 { font-size: 17px; margin-bottom: 16px; }
+
+        .loading { text-align: center; padding: 30px; color: var(--fg-muted); font-size: 13px; }
+        .hidden { display: none !important; }
+
+        /* 菜品库存概览进度条 */
+        .dish-stock-bar {
             display: flex;
-            gap: 8px;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-soft);
         }
-        
-        .low-stock {
-            color: #e74c3c;
-            font-weight: 600;
+        .dish-stock-bar:last-child { border-bottom: none; }
+        .dish-stock-bar .name { width: 100px; font-size: 13px; }
+        .dish-stock-bar .bar {
+            flex: 1; height: 6px;
+            background: var(--border-soft);
+            border-radius: 3px;
+            overflow: hidden;
         }
+        .dish-stock-bar .bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+        }
+        .dish-stock-bar .bar-fill.low { background: var(--danger); }
+        .dish-stock-bar .bar-fill.mid { background: var(--warning); }
+        .dish-stock-bar .qty { width: 55px; text-align: right; font-size: 12px; font-weight: 600; color: var(--fg-soft); }
+
+        /* 移动端响应式 */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                box-shadow: var(--shadow-lg);
+            }
+            .sidebar.open { transform: translateX(0); }
+            .main { margin-left: 0; padding: 16px; }
+            .topbar .menu-btn { display: block; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .dish-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .dish-item .actions { width: 100%; }
+            .modal-content.large { max-width: 100%; }
+            table { font-size: 12px; }
+            th, td { padding: 8px 6px; }
+        }
+
+        .overlay-mask {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 99;
+        }
+        .overlay-mask.show { display: block; }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2> 管理后台</h2>
-        <ul class="sidebar-nav">
-            <li><a href="#" class="active" onclick="showTab('dashboard')"> 数据概览</a></li>
-            <li><a href="#" onclick="showTab('dish')">️ 菜品管理</a></li>
-            <li><a href="#" onclick="showTab('order')"> 订单管理</a></li>
-            <li><a href="#" onclick="showTab('config')">⚙️ 系统配置</a></li>
-            <li><a href="#" onclick="showTab('logs')"> 操作日志</a></li>
-        </ul>
-    </div>
 
-    <div class="main-content">
-        <div class="header">
-            <h1 id="page-title">数据概览</h1>
-            <div class="admin-info">管理员：马静</div>
+<!-- 绑定/登录页 -->
+<div id="bind-page" class="bind-page hidden">
+    <div class="bind-card">
+        <div class="logo">
+            <div class="icon">管</div>
+            <h1>食堂预订系统</h1>
+            <p>管理端 · 首次使用请绑定信息</p>
+        </div>
+        <div id="bind-message"></div>
+        <div class="form-group">
+            <label>管理员账号</label>
+            <input type="text" id="bind-admin-id" value="admin" readonly style="background:var(--bg-soft)">
+        </div>
+        <div class="form-group">
+            <label>姓名</label>
+            <input type="text" id="bind-name" placeholder="请输入管理员姓名">
+        </div>
+        <div class="form-group">
+            <label>工号</label>
+            <input type="text" id="bind-employee-id" placeholder="请输入工号">
+        </div>
+        <button class="btn btn-block" onclick="doBind()">绑定并进入</button>
+    </div>
+</div>
+
+<!-- 主界面 -->
+<div id="main-layout" class="layout hidden">
+    <div class="overlay-mask" id="overlay-mask" onclick="toggleSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">
+            <div class="icon">管</div>
+            <h2>食堂预订</h2>
+            <p>管理端</p>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="#" onclick="showTab('dashboard'); return false;" class="active"><span class="ico">▣</span> 数据概览</a></li>
+            <li><a href="#" onclick="showTab('dish'); return false;"><span class="ico">♨</span> 菜品管理</a></li>
+            <li><a href="#" onclick="showTab('order'); return false;"><span class="ico">▤</span> 订单管理</a></li>
+            <li><a href="#" onclick="showTab('config'); return false;"><span class="ico">⚙</span> 系统配置</a></li>
+            <li><a href="#" onclick="showTab('logs'); return false;"><span class="ico">≡</span> 操作日志</a></li>
+        </ul>
+        <div class="footer">
+            <div class="admin-name" id="sidebar-admin-name">管理员</div>
+            <a class="logout" onclick="logout()">退出登录</a>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div style="display:flex;align-items:center;gap:12px">
+                <button class="menu-btn" onclick="toggleSidebar()">≡</button>
+                <h1 id="page-title">数据概览</h1>
+            </div>
         </div>
 
+        <!-- 数据概览 -->
         <div id="dashboard-tab">
             <div class="stats-grid">
-                <div class="stat-card total" onclick="showOrdersByStatus('')">
+                <div class="stat-card" onclick="showOrdersByStatus('')">
                     <div class="number" id="stat-total">0</div>
                     <div class="label">今日订单</div>
                     <div class="hint">点击查看全部</div>
                 </div>
-                <div class="stat-card pending" onclick="showOrdersByStatus('pending')">
+                <div class="stat-card" onclick="showOrdersByStatus('pending')">
                     <div class="number" id="stat-pending">0</div>
                     <div class="label">待取餐</div>
                     <div class="hint">点击查看详情</div>
                 </div>
-                <div class="stat-card taken" onclick="showOrdersByStatus('taken')">
+                <div class="stat-card" onclick="showOrdersByStatus('taken')">
                     <div class="number" id="stat-taken">0</div>
                     <div class="label">已取餐</div>
                     <div class="hint">点击查看详情</div>
                 </div>
             </div>
 
-            <div class="recent-orders-card">
+            <div class="card">
                 <div class="card-title">
-                    <span>📋 最近订单</span>
+                    <span>最近订单</span>
                     <a href="#" onclick="showTab('order'); return false;">查看全部 →</a>
                 </div>
-                <div id="recent-orders-container">
-                    <div class="loading">加载中...</div>
-                </div>
-            </div>
-
-            <div class="dish-overview-card">
-                <div class="card-title">
-                    <span>🍲 菜品库存概览</span>
-                    <a href="#" onclick="showTab('dish'); return false;">管理菜品 →</a>
-                </div>
-                <div id="dish-overview-container">
-                    <div class="loading">加载中...</div>
-                </div>
+                <div id="recent-orders-container"><div class="loading">加载中...</div></div>
             </div>
 
             <div class="card">
-                <div class="card-title"> 热销菜品 TOP5</div>
+                <div class="card-title">
+                    <span>菜品库存概览</span>
+                    <a href="#" onclick="showTab('dish'); return false;">管理菜品 →</a>
+                </div>
+                <div id="dish-overview-container"><div class="loading">加载中...</div></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">热销菜品 TOP 5</div>
                 <table id="top-dishes-table">
-                    <thead>
-                        <tr><th>菜品</th><th>销量</th></tr>
-                    </thead>
+                    <thead><tr><th>菜品</th><th>销量</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
 
             <div class="card">
-                <div class="card-title">⚠️ 低库存预警</div>
+                <div class="card-title">低库存预警</div>
                 <table id="low-stock-table">
-                    <thead>
-                        <tr><th>菜品</th><th>剩余库存</th></tr>
-                    </thead>
+                    <thead><tr><th>菜品</th><th>剩余库存</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
         </div>
 
+        <!-- 菜品管理 -->
         <div id="dish-tab" class="hidden">
             <div class="card">
                 <div class="card-title">上架新菜品</div>
                 <div id="dish-message"></div>
                 <div class="form-row">
-                    <div class="form-group">
-                        <label>菜品名称</label>
-                        <input type="text" id="dish-name" placeholder="如：大肉包">
-                    </div>
-                    <div class="form-group">
-                        <label>初始库存</label>
-                        <input type="number" id="dish-stock" placeholder="0" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label>每人限购</label>
-                        <input type="number" id="dish-limit" placeholder="5" min="1">
-                    </div>
+                    <div class="form-group"><label>菜品名称</label><input type="text" id="dish-name" placeholder="如：大肉包"></div>
+                    <div class="form-group"><label>初始库存</label><input type="number" id="dish-stock" placeholder="0" min="0"></div>
+                    <div class="form-group"><label>每人限购</label><input type="number" id="dish-limit" placeholder="5" min="1"></div>
+                    <div class="form-group"><label>营养信息(JSON)</label><input type="text" id="dish-nutrition" placeholder='{"cal":300,"sugar":5}'></div>
+                    <div class="form-group"><label>过敏标签</label><input type="text" id="dish-allergy" placeholder="如：花生"></div>
+                    <div class="form-group"><label>别名(逗号分隔)</label><input type="text" id="dish-alias" placeholder="如：红烧"></div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>营养信息（可选）</label>
-                        <input type="text" id="dish-nutrition" placeholder='{"cal":200,"sugar":10}'>
-                    </div>
-                    <div class="form-group">
-                        <label>过敏原标签（可选）</label>
-                        <input type="text" id="dish-allergy" placeholder="如：乳制品">
-                    </div>
-                </div>
-                <button class="btn btn-success" onclick="addDish()">上架</button>
+                <button class="btn" onclick="addDish()">上架菜品</button>
             </div>
-
             <div class="card">
                 <div class="card-title">菜品列表</div>
-                <div id="dish-list"></div>
                 <div id="dish-loading" class="loading">加载中...</div>
+                <div id="dish-list" class="dish-list"></div>
             </div>
         </div>
 
+        <!-- 订单管理 -->
         <div id="order-tab" class="hidden">
             <div class="card">
-                <div class="card-title">超时订单处理</div>
-                <div id="overtime-message"></div>
-                <button class="btn btn-danger" onclick="processOvertimeOrders()">处理超时订单</button>
-            </div>
-
-            <div class="card">
-                <div class="card-title">订单核销</div>
+                <div class="card-title">订单核销 / 取消</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>核销订单（取餐）</label>
+                        <input type="text" id="verify-order-id" placeholder="输入订单号">
+                        <button class="btn btn-success" style="margin-top:8px" onclick="verifyOrder()">核销</button>
+                    </div>
+                    <div class="form-group">
+                        <label>取消订单</label>
+                        <input type="text" id="cancel-order-id" placeholder="输入订单号">
+                        <button class="btn btn-danger" style="margin-top:8px" onclick="cancelOrder()">取消</button>
+                    </div>
+                </div>
                 <div id="verify-message"></div>
-                <div class="form-group">
-                    <label>订单号</label>
-                    <input type="text" id="verify-order-id" placeholder="输入订单号，如：D20260715001">
-                </div>
-                <button class="btn btn-success" onclick="verifyOrder()">核销</button>
-            </div>
-
-            <div class="card">
-                <div class="card-title">取消订单</div>
                 <div id="cancel-message"></div>
-                <div class="form-group">
-                    <label>订单号</label>
-                    <input type="text" id="cancel-order-id" placeholder="输入订单号">
-                </div>
-                <button class="btn btn-danger" onclick="cancelOrder()">取消</button>
             </div>
-
             <div class="card">
                 <div class="card-title">今日订单列表</div>
                 <div class="search-bar">
                     <input type="text" id="order-search" placeholder="搜索订单号或菜品...">
-                    <button class="btn btn-secondary" onclick="searchOrders()">搜索</button>
+                    <button class="btn btn-outline" onclick="searchOrders()">搜索</button>
                 </div>
-                <table id="order-table">
-                    <thead>
-                        <tr><th>订单号</th><th>用户</th><th>菜品</th><th>数量</th><th>下单时间</th><th>状态</th><th>操作</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                <div style="overflow-x:auto">
+                    <table id="order-table">
+                        <thead><tr><th>订单号</th><th>用户</th><th>菜品</th><th>数量</th><th>下单时间</th><th>状态</th><th>操作</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
+        <!-- 系统配置 -->
         <div id="config-tab" class="hidden">
             <div class="card">
                 <div class="card-title">系统配置</div>
@@ -635,655 +585,489 @@
                     <input type="time" id="cutoff-time" value="10:00">
                 </div>
                 <div class="form-row">
-                    <div class="form-group">
-                        <label>取餐开始时间</label>
-                        <input type="time" id="take-start" value="11:30">
-                    </div>
-                    <div class="form-group">
-                        <label>取餐结束时间</label>
-                        <input type="time" id="take-end" value="12:30">
-                    </div>
+                    <div class="form-group"><label>取餐开始时间</label><input type="time" id="take-start" value="11:30"></div>
+                    <div class="form-group"><label>取餐结束时间</label><input type="time" id="take-end" value="12:30"></div>
                 </div>
-                <div style="display: flex; gap: 10px;">
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
                     <button class="btn" onclick="updateCutoff()">更新截止时间</button>
                     <button class="btn" onclick="updateTakeTime()">更新取餐时段</button>
+                    <button class="btn btn-outline" onclick="processOvertime()">处理超时订单</button>
                 </div>
             </div>
         </div>
 
+        <!-- 操作日志 -->
         <div id="logs-tab" class="hidden">
             <div class="card">
-                <div class="card-title">操作日志</div>
-                <table id="logs-table">
-                    <thead>
-                        <tr><th>时间</th><th>操作人</th><th>操作类型</th><th>详情</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                <div class="card-title">操作日志（最近20条）</div>
+                <div style="overflow-x:auto">
+                    <table id="logs-table">
+                        <thead><tr><th>时间</th><th>操作人</th><th>操作类型</th><th>详情</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
+    </main>
+</div>
+
+<!-- 编辑菜品模态框 -->
+<div class="modal" id="edit-modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal()">×</span>
+        <h3>编辑菜品</h3>
+        <div class="form-group"><label>菜品名称</label><input type="text" id="edit-name" disabled></div>
+        <div class="form-group"><label>当前库存</label><input type="number" id="edit-stock"></div>
+        <div class="form-group"><label>每人限购</label><input type="number" id="edit-limit"></div>
+        <button class="btn btn-block" onclick="updateDish()">保存修改</button>
     </div>
+</div>
 
-    <div class="modal" id="edit-modal">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeModal()">&times;</span>
-            <h3>编辑菜品</h3>
-            <input type="hidden" id="edit-dish-id">
-            <div class="form-group">
-                <label>菜品名称</label>
-                <input type="text" id="edit-name" disabled>
-            </div>
-            <div class="form-group">
-                <label>当前库存</label>
-                <input type="number" id="edit-stock">
-            </div>
-            <div class="form-group">
-                <label>每人限购</label>
-                <input type="number" id="edit-limit">
-            </div>
-            <button class="btn" onclick="updateDish()">保存修改</button>
-        </div>
+<!-- 订单详情模态框 -->
+<div class="modal" id="orders-modal">
+    <div class="modal-content large">
+        <span class="modal-close" onclick="closeOrdersModal()">×</span>
+        <h3 id="orders-modal-title">订单列表</h3>
+        <div id="orders-modal-body"><div class="loading">加载中...</div></div>
     </div>
+</div>
 
-    <div class="modal" id="orders-modal">
-        <div class="modal-content large">
-            <span class="modal-close" onclick="closeOrdersModal()">&times;</span>
-            <h3 id="orders-modal-title">订单列表</h3>
-            <div id="orders-modal-body">
-                <div class="loading">加载中...</div>
-            </div>
-        </div>
-    </div>
+<script>
+    const API_BASE = '';
+    const ADMIN_ID = 'admin';
 
-    <script>
-        const API_BASE = '';
-        const ADMIN_ID = 'admin';
+    function showMessage(elementId, message, type) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        el.innerHTML = `<div class="message ${type}">${message}</div>`;
+        setTimeout(() => { el.innerHTML = ''; }, 3000);
+    }
 
-        function showTab(tab) {
-            document.querySelectorAll('.sidebar-nav li a').forEach(a => a.classList.remove('active'));
-            document.querySelector(`.sidebar-nav li a[onclick="showTab('${tab}')"]`).classList.add('active');
+    function getStatusText(status) {
+        return {'pending':'待取餐','taken':'已取餐','cancelled':'已取消','overtime':'超时未取'}[status] || status;
+    }
 
-            document.getElementById('dashboard-tab').classList.add('hidden');
-            document.getElementById('dish-tab').classList.add('hidden');
-            document.getElementById('order-tab').classList.add('hidden');
-            document.getElementById('config-tab').classList.add('hidden');
-            document.getElementById('logs-tab').classList.add('hidden');
-
-            document.getElementById(`${tab}-tab`).classList.remove('hidden');
-
-            const titles = {
-                'dashboard': '数据概览',
-                'dish': '菜品管理',
-                'order': '订单管理',
-                'config': '系统配置',
-                'logs': '操作日志'
-            };
-            document.getElementById('page-title').textContent = titles[tab];
-
-            if (tab === 'dashboard') loadStats();
-            if (tab === 'dish') loadDishes();
-            if (tab === 'order') loadOrders();
-            if (tab === 'logs') loadLogs();
-        }
-
-        function showMessage(elementId, message, type) {
-            const el = document.getElementById(elementId);
-            el.innerHTML = `<div class="message ${type}">${message}</div>`;
-            setTimeout(() => { el.innerHTML = ''; }, 3000);
-        }
-
-        async function loadStats() {
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/stats?admin_id=${ADMIN_ID}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    document.getElementById('stat-total').textContent = data.data.total_orders;
-                    document.getElementById('stat-pending').textContent = data.data.pending_orders;
-                    document.getElementById('stat-taken').textContent = data.data.taken_orders;
-
-                    const topTable = document.getElementById('top-dishes-table tbody');
-                    topTable.innerHTML = '';
-                    data.data.top_dishes.forEach(dish => {
-                        topTable.innerHTML += `<tr><td>${dish.name}</td><td>${dish.quantity}</td></tr>`;
-                    });
-                    if (data.data.top_dishes.length === 0) {
-                        topTable.innerHTML = '<tr><td colspan="2" class="loading">暂无数据</td></tr>';
-                    }
-
-                    const lowTable = document.getElementById('low-stock-table tbody');
-                    lowTable.innerHTML = '';
-                    data.data.low_stock.forEach(dish => {
-                        lowTable.innerHTML += `<tr><td>${dish.name}</td><td class="low-stock">${dish.remaining}</td></tr>`;
-                    });
-                    if (data.data.low_stock.length === 0) {
-                        lowTable.innerHTML = '<tr><td colspan="2" class="loading">暂无低库存菜品</td></tr>';
-                    }
-                }
-            } catch (error) {
-                console.error('加载统计失败:', error);
+    // ===== 启动时检查管理员绑定状态 =====
+    async function checkAdminStatus() {
+        try {
+            const resp = await fetch(`${API_BASE}/api/admin/info?admin_id=${ADMIN_ID}`);
+            const data = await resp.json();
+            if (data.success && data.data.need_bind) {
+                // 需要绑定
+                document.getElementById('bind-page').classList.remove('hidden');
+                document.getElementById('main-layout').classList.add('hidden');
+            } else if (data.success) {
+                // 已绑定，进入主界面
+                document.getElementById('sidebar-admin-name').textContent = data.data.name || '管理员';
+                document.getElementById('bind-page').classList.add('hidden');
+                document.getElementById('main-layout').classList.remove('hidden');
+                loadStats();
+            } else {
+                // 账号不存在，显示绑定页
+                document.getElementById('bind-page').classList.remove('hidden');
             }
-
-            // 同时加载最近订单和菜品库存概览
-            loadRecentOrders();
-            loadDishOverview();
+        } catch (e) {
+            console.error('检查管理员状态失败:', e);
+            document.getElementById('bind-page').classList.remove('hidden');
         }
+    }
 
-        // 加载最近 5 条订单，显示在概览页
-        async function loadRecentOrders() {
-            const container = document.getElementById('recent-orders-container');
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/orders?admin_id=${ADMIN_ID}`);
-                const data = await response.json();
-                if (data.success) {
-                    const recent = data.data.slice(0, 5);
-                    if (recent.length === 0) {
-                        container.innerHTML = '<div class="loading">今日暂无订单</div>';
-                        return;
-                    }
-                    let html = '<table class="modal-table"><thead><tr><th>订单号</th><th>下单人</th><th>菜品</th><th>数量</th><th>时间</th><th>状态</th></tr></thead><tbody>';
-                    recent.forEach(o => {
-                        const time = o.order_time ? o.order_time.substring(11, 16) : '';
-                        html += `<tr>
-                            <td style="color:#667eea;font-weight:600">${o.order_id}</td>
-                            <td>${o.user_name}</td>
-                            <td>${o.dish_name}</td>
-                            <td>${o.quantity}</td>
-                            <td>${time}</td>
-                            <td><span class="status-badge ${o.status}">${getStatusText(o.status)}</span></td>
-                        </tr>`;
-                    });
-                    html += '</tbody></table>';
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<div class="loading">加载失败</div>';
-                }
-            } catch (e) {
-                container.innerHTML = '<div class="loading">加载失败</div>';
+    async function doBind() {
+        const name = document.getElementById('bind-name').value.trim();
+        const employeeId = document.getElementById('bind-employee-id').value.trim();
+        if (!name || !employeeId) {
+            showMessage('bind-message', '请填写姓名和工号', 'error');
+            return;
+        }
+        try {
+            const resp = await fetch(`${API_BASE}/api/admin/bind`, {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({admin_id: ADMIN_ID, name, employee_id: employeeId})
+            });
+            const data = await resp.json();
+            if (data.success) {
+                showMessage('bind-message', data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showMessage('bind-message', data.message, 'error');
             }
+        } catch (e) {
+            showMessage('bind-message', '网络错误', 'error');
         }
+    }
 
-        // 加载菜品库存概览（带进度条）
-        async function loadDishOverview() {
-            const container = document.getElementById('dish-overview-container');
-            try {
-                const response = await fetch(`${API_BASE}/api/menu`);
-                const data = await response.json();
-                if (data.success) {
-                    if (data.data.length === 0) {
-                        container.innerHTML = '<div class="loading">暂无菜品</div>';
-                        return;
-                    }
-                    // 找最大库存作为进度条基准
-                    const maxStock = Math.max(...data.data.map(d => d.remaining), 1);
-                    let html = '';
-                    data.data.forEach(d => {
-                        const percent = Math.round(d.remaining / maxStock * 100);
-                        let barClass = '';
-                        if (d.remaining <= 5) barClass = 'low';
-                        else if (d.remaining <= 15) barClass = 'mid';
-                        html += `<div class="dish-stock-bar">
-                            <div class="name">${d.name}</div>
-                            <div class="bar"><div class="bar-fill ${barClass}" style="width:${percent}%"></div></div>
-                            <div class="qty">${d.remaining} 份</div>
-                        </div>`;
-                    });
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<div class="loading">加载失败</div>';
-                }
-            } catch (e) {
-                container.innerHTML = '<div class="loading">加载失败</div>';
-            }
+    function logout() {
+        if (confirm('确定退出登录？')) {
+            // 管理员退出只是刷新页面，绑定状态保留在数据库
+            location.reload();
         }
+    }
 
-        // 点击统计卡片，弹出对应状态的订单列表
-        async function showOrdersByStatus(status) {
-            const modal = document.getElementById('orders-modal');
-            const title = document.getElementById('orders-modal-title');
-            const body = document.getElementById('orders-modal-body');
+    // ===== 侧边栏切换（移动端） =====
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('overlay-mask').classList.toggle('show');
+    }
 
-            const titleMap = {
-                '': '今日全部订单',
-                'pending': '待取餐订单',
-                'taken': '已取餐订单'
-            };
-            title.textContent = titleMap[status] || '订单列表';
-            body.innerHTML = '<div class="loading">加载中...</div>';
-            modal.style.display = 'flex';
+    function showTab(tab) {
+        document.querySelectorAll('.sidebar-nav li a').forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.sidebar-nav li a[onclick="showTab('${tab}'); return false;"]`);
+        if (active) active.classList.add('active');
 
-            try {
-                let url = `${API_BASE}/api/admin/orders?admin_id=${ADMIN_ID}`;
-                if (status) url += `&status=${status}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                if (data.success) {
-                    if (data.data.length === 0) {
-                        body.innerHTML = '<div class="loading">暂无订单</div>';
-                        return;
-                    }
-                    let html = '<table class="modal-table"><thead><tr><th>订单号</th><th>下单人</th><th>工号</th><th>菜品</th><th>数量</th><th>下单时间</th><th>取餐截止</th><th>取餐码</th><th>状态</th></tr></thead><tbody>';
-                    data.data.forEach(o => {
-                        const orderTime = o.order_time ? o.order_time.substring(5, 16) : '';
-                        const deadline = o.take_deadline ? o.take_deadline.substring(5, 16) : '';
-                        html += `<tr>
-                            <td style="color:#667eea;font-weight:600">${o.order_id}</td>
-                            <td>${o.user_name}</td>
-                            <td>${o.user_id.replace('u_', '')}</td>
-                            <td>${o.dish_name}</td>
-                            <td>${o.quantity}</td>
-                            <td>${orderTime}</td>
-                            <td>${deadline}</td>
-                            <td style="font-weight:600;color:#e74c3c">${o.pickup_code}</td>
-                            <td><span class="status-badge ${o.status}">${getStatusText(o.status)}</span></td>
-                        </tr>`;
-                    });
-                    html += '</tbody></table>';
-                    body.innerHTML = html;
-                } else {
-                    body.innerHTML = `<div class="loading">${data.message || '加载失败'}</div>`;
-                }
-            } catch (e) {
-                body.innerHTML = '<div class="loading">加载失败</div>';
-            }
-        }
-
-        function closeOrdersModal() {
-            document.getElementById('orders-modal').style.display = 'none';
-        }
-
-        async function addDish() {
-            const name = document.getElementById('dish-name').value.trim();
-            const stock = parseInt(document.getElementById('dish-stock').value);
-            const limit = parseInt(document.getElementById('dish-limit').value) || 5;
-            const nutrition = document.getElementById('dish-nutrition').value.trim();
-            const allergy = document.getElementById('dish-allergy').value.trim();
-
-            if (!name || isNaN(stock)) {
-                showMessage('dish-message', '请填写菜品名称和库存', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/add_dish`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        admin_id: ADMIN_ID,
-                        name,
-                        stock,
-                        limit_per_person: limit,
-                        nutrition_info: nutrition,
-                        allergy_tag: allergy
-                    })
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    showMessage('dish-message', data.message, 'success');
-                    document.getElementById('dish-name').value = '';
-                    document.getElementById('dish-stock').value = '';
-                    document.getElementById('dish-limit').value = '';
-                    document.getElementById('dish-nutrition').value = '';
-                    document.getElementById('dish-allergy').value = '';
-                    loadDishes();
-                } else {
-                    showMessage('dish-message', data.message, 'error');
-                }
-            } catch (error) {
-                showMessage('dish-message', '操作失败', 'error');
-            }
-        }
-
-        async function loadDishes() {
-            document.getElementById('dish-loading').classList.remove('hidden');
-            document.getElementById('dish-list').innerHTML = '';
-
-            try {
-                const response = await fetch(`${API_BASE}/api/menu`);
-                const data = await response.json();
-
-                if (data.success) {
-                    const list = document.getElementById('dish-list');
-                    data.data.forEach(dish => {
-                        const item = document.createElement('div');
-                        item.className = 'menu-item';
-                        const stockClass = dish.remaining <= 5 ? 'low-stock' : '';
-                        item.innerHTML = `
-                            <div class="info">
-                                <div class="name">${dish.name}</div>
-                                <div class="meta">库存：<span class="${stockClass}">${dish.remaining}</span> | 限购：${dish.limit_per_person} 份 ${dish.allergy_tag ? `| ⚠️ ${dish.allergy_tag}` : ''}</div>
-                            </div>
-                            <div class="actions">
-                                <button class="btn btn-sm" onclick="openEditModal('${dish.name}', ${dish.remaining}, ${dish.limit_per_person})">编辑</button>
-                                <button class="btn btn-sm" onclick="restockDish('${dish.name}')">补货</button>
-                                <button class="btn btn-sm btn-danger" onclick="removeDish('${dish.name}')">下架</button>
-                            </div>
-                        `;
-                        list.appendChild(item);
-                    });
-                    if (data.data.length === 0) {
-                        list.innerHTML = '<div class="loading">暂无上架菜品</div>';
-                    }
-                }
-            } catch (error) {
-                document.getElementById('dish-list').innerHTML = '<div class="loading">加载失败</div>';
-            } finally {
-                document.getElementById('dish-loading').classList.add('hidden');
-            }
-        }
-
-        function openEditModal(name, stock, limit) {
-            document.getElementById('edit-name').value = name;
-            document.getElementById('edit-stock').value = stock;
-            document.getElementById('edit-limit').value = limit;
-            document.getElementById('edit-modal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('edit-modal').style.display = 'none';
-        }
-
-        async function updateDish() {
-            const name = document.getElementById('edit-name').value;
-            const stock = parseInt(document.getElementById('edit-stock').value);
-            const limit = parseInt(document.getElementById('edit-limit').value);
-
-            try {
-                const updateStock = await fetch(`${API_BASE}/api/admin/update_stock`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_id: ADMIN_ID, name, new_stock: stock })
-                });
-
-                const updateLimit = await fetch(`${API_BASE}/api/admin/update_limit`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_id: ADMIN_ID, name, new_limit: limit })
-                });
-
-                if (updateStock.ok && updateLimit.ok) {
-                    showMessage('dish-message', '修改成功', 'success');
-                    closeModal();
-                    loadDishes();
-                } else {
-                    showMessage('dish-message', '修改失败', 'error');
-                }
-            } catch (error) {
-                showMessage('dish-message', '操作失败', 'error');
-            }
-        }
-
-        async function removeDish(name) {
-            if (!confirm(`确定要下架 "${name}" 吗？`)) return;
-
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/remove_dish`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_id: ADMIN_ID, name })
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    showMessage('dish-message', data.message, 'success');
-                    loadDishes();
-                } else {
-                    showMessage('dish-message', data.message, 'error');
-                }
-            } catch (error) {
-                showMessage('dish-message', '操作失败', 'error');
-            }
-        }
-
-        async function restockDish(name) {
-            const amount = parseInt(prompt('请输入补货数量：'));
-            if (isNaN(amount) || amount <= 0) {
-                alert('请输入有效数量');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/restock`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_id: ADMIN_ID, name, amount })
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    showMessage('dish-message', data.message, 'success');
-                    loadDishes();
-                } else {
-                    showMessage('dish-message', data.message, 'error');
-                }
-            } catch (error) {
-                showMessage('dish-message', '操作失败', 'error');
-            }
-        }
-
-        async function verifyOrder() {
-            const orderId = document.getElementById('verify-order-id').value.trim();
-            if (!orderId) {
-                showMessage('verify-message', '请输入订单号', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/api/verify_order`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_id: ADMIN_ID, order_id: orderId })
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    showMessage('verify-message', data.message, 'success');
-                    document.getElementById('verify-order-id').value = '';
-                    loadOrders();
-                } else {
-                    showMessage('verify-message', data.message, 'error');
-                }
-            } catch (error) {
-                showMessage('verify-message', '操作失败', 'error');
-            }
-        }
-
-        async function cancelOrder() {
-            const orderId = document.getElementById('cancel-order-id').value.trim();
-            if (!orderId) {
-                showMessage('cancel-message', '请输入订单号', 'error');
-                return;
-            }
-
-            if (!confirm(`确定要取消订单 "${orderId}" 吗？`)) return;
-
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/cancel_order`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_id: ADMIN_ID, order_id: orderId })
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    showMessage('cancel-message', data.message, 'success');
-                    document.getElementById('cancel-order-id').value = '';
-                    loadOrders();
-                } else {
-                    showMessage('cancel-message', data.message, 'error');
-                }
-            } catch (error) {
-                showMessage('cancel-message', '操作失败', 'error');
-            }
-        }
-
-        async function loadOrders() {
-            const tbody = document.getElementById('order-table tbody');
-            tbody.innerHTML = '<tr><td colspan="7" class="loading">加载中...</td></tr>';
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/orders?admin_id=${ADMIN_ID}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    tbody.innerHTML = '';
-                    
-                    if (data.data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="7" class="loading">今日暂无订单</td></tr>';
-                        return;
-                    }
-                    
-                    data.data.forEach(order => {
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>${order.order_id}</td>
-                                <td>${order.user_name}</td>
-                                <td>${order.dish_name}</td>
-                                <td>${order.quantity}</td>
-                                <td>${order.order_time}</td>
-                                <td><span class="status-badge ${order.status}">${getStatusText(order.status)}</span></td>
-                                <td>
-                                    ${order.status === 'pending' ? `
-                                        <button class="btn btn-sm btn-success" onclick="verifyOrderById('${order.order_id}')">核销</button>
-                                        <button class="btn btn-sm btn-danger" onclick="cancelOrderById('${order.order_id}')">取消</button>
-                                    ` : ''}
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-            } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="7" class="loading">加载失败</td></tr>';
-            }
-        }
-
-        function verifyOrderById(orderId) {
-            document.getElementById('verify-order-id').value = orderId;
-            verifyOrder();
-        }
-
-        function cancelOrderById(orderId) {
-            document.getElementById('cancel-order-id').value = orderId;
-            cancelOrder();
-        }
-
-        function searchOrders() {
-            const keyword = document.getElementById('order-search').value.trim();
-            loadOrders();
-        }
-
-        function getStatusText(status) {
-            const map = {
-                'pending': '待取餐',
-                'taken': '已取餐',
-                'cancelled': '已取消',
-                'overtime': '超时未取'
-            };
-            return map[status] || status;
-        }
-
-        async function updateCutoff() {
-            const cutoffTime = document.getElementById('cutoff-time').value;
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/update_cutoff`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_id: ADMIN_ID, cutoff_time: cutoffTime })
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    showMessage('config-message', data.message, 'success');
-                } else {
-                    showMessage('config-message', data.message, 'error');
-                }
-            } catch (error) {
-                showMessage('config-message', '操作失败', 'error');
-            }
-        }
-
-        async function updateTakeTime() {
-            const takeStart = document.getElementById('take-start').value;
-            const takeEnd = document.getElementById('take-end').value;
-
-            if (takeStart >= takeEnd) {
-                showMessage('config-message', '取餐结束时间必须晚于开始时间', 'error');
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/update_take_time`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_id: ADMIN_ID, take_start: takeStart, take_end: takeEnd })
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    showMessage('config-message', data.message, 'success');
-                } else {
-                    showMessage('config-message', data.message, 'error');
-                }
-            } catch (error) {
-                showMessage('config-message', '操作失败', 'error');
-            }
-        }
-
-        async function processOvertimeOrders() {
-            if (!confirm('确定要处理所有超时订单吗？超时订单将被标记为超时，库存将自动释放。')) return;
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/process_overtime`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_id: ADMIN_ID })
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    showMessage('overtime-message', data.message, 'success');
-                    loadOrders();
-                    loadStats();
-                } else {
-                    showMessage('overtime-message', data.message, 'error');
-                }
-            } catch (error) {
-                showMessage('overtime-message', '操作失败', 'error');
-            }
-        }
-
-        async function loadLogs() {
-            try {
-                const response = await fetch(`${API_BASE}/api/admin/logs?admin_id=${ADMIN_ID}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    const tbody = document.getElementById('logs-table tbody');
-                    tbody.innerHTML = '';
-                    data.data.forEach(log => {
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>${log.created_at}</td>
-                                <td>${log.admin_name}</td>
-                                <td>${log.action}</td>
-                                <td>${log.detail}</td>
-                            </tr>
-                        `;
-                    });
-                    if (data.data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" class="loading">暂无操作日志</td></tr>';
-                    }
-                }
-            } catch (error) {
-                console.error('加载日志失败:', error);
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            loadStats();
+        ['dashboard','dish','order','config','logs'].forEach(t => {
+            document.getElementById(`${t}-tab`).classList.add('hidden');
         });
-    </script>
+        document.getElementById(`${tab}-tab`).classList.remove('hidden');
+
+        const titles = {'dashboard':'数据概览','dish':'菜品管理','order':'订单管理','config':'系统配置','logs':'操作日志'};
+        document.getElementById('page-title').textContent = titles[tab];
+
+        if (tab === 'dashboard') loadStats();
+        if (tab === 'dish') loadDishes();
+        if (tab === 'order') loadOrders();
+        if (tab === 'logs') loadLogs();
+
+        // 移动端关闭侧边栏
+        if (window.innerWidth <= 768) {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('overlay-mask').classList.remove('show');
+        }
+    }
+
+    // ===== 数据概览 =====
+    async function loadStats() {
+        try {
+            const resp = await fetch(`${API_BASE}/api/admin/stats?admin_id=${ADMIN_ID}`);
+            const data = await resp.json();
+            if (data.success) {
+                document.getElementById('stat-total').textContent = data.data.total_orders;
+                document.getElementById('stat-pending').textContent = data.data.pending_orders;
+                document.getElementById('stat-taken').textContent = data.data.taken_orders;
+
+                const topTable = document.querySelector('#top-dishes-table tbody');
+                topTable.innerHTML = '';
+                data.data.top_dishes.forEach(d => {
+                    topTable.innerHTML += `<tr><td>${d.name}</td><td>${d.quantity}</td></tr>`;
+                });
+                if (data.data.top_dishes.length === 0) {
+                    topTable.innerHTML = '<tr><td colspan="2" class="loading">暂无数据</td></tr>';
+                }
+
+                const lowTable = document.querySelector('#low-stock-table tbody');
+                lowTable.innerHTML = '';
+                data.data.low_stock.forEach(d => {
+                    lowTable.innerHTML += `<tr><td>${d.name}</td><td class="low-stock">${d.remaining}</td></tr>`;
+                });
+                if (data.data.low_stock.length === 0) {
+                    lowTable.innerHTML = '<tr><td colspan="2" class="loading">暂无低库存菜品</td></tr>';
+                }
+            }
+        } catch (e) { console.error('加载统计失败:', e); }
+        loadRecentOrders();
+        loadDishOverview();
+    }
+
+    async function loadRecentOrders() {
+        const container = document.getElementById('recent-orders-container');
+        try {
+            const resp = await fetch(`${API_BASE}/api/admin/orders?admin_id=${ADMIN_ID}`);
+            const data = await resp.json();
+            if (data.success) {
+                const recent = data.data.slice(0, 5);
+                if (recent.length === 0) {
+                    container.innerHTML = '<div class="loading">今日暂无订单</div>';
+                    return;
+                }
+                let html = '<table><thead><tr><th>订单号</th><th>下单人</th><th>菜品</th><th>数量</th><th>时间</th><th>状态</th></tr></thead><tbody>';
+                recent.forEach(o => {
+                    const time = o.order_time ? o.order_time.substring(11,16) : '';
+                    html += `<tr><td style="font-weight:600">${o.order_id}</td><td>${o.user_name}</td><td>${o.dish_name}</td><td>${o.quantity}</td><td>${time}</td><td><span class="status-badge ${o.status}">${getStatusText(o.status)}</span></td></tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }
+        } catch (e) { container.innerHTML = '<div class="loading">加载失败</div>'; }
+    }
+
+    async function loadDishOverview() {
+        const container = document.getElementById('dish-overview-container');
+        try {
+            const resp = await fetch(`${API_BASE}/api/menu`);
+            const data = await resp.json();
+            if (data.success && data.data.length > 0) {
+                const maxStock = Math.max(...data.data.map(d => d.remaining), 1);
+                let html = '';
+                data.data.forEach(d => {
+                    const percent = Math.round(d.remaining / maxStock * 100);
+                    let cls = '';
+                    if (d.remaining <= 5) cls = 'low';
+                    else if (d.remaining <= 15) cls = 'mid';
+                    html += `<div class="dish-stock-bar"><div class="name">${d.name}</div><div class="bar"><div class="bar-fill ${cls}" style="width:${percent}%"></div></div><div class="qty">${d.remaining} 份</div></div>`;
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<div class="loading">暂无菜品</div>';
+            }
+        } catch (e) { container.innerHTML = '<div class="loading">加载失败</div>'; }
+    }
+
+    async function showOrdersByStatus(status) {
+        const modal = document.getElementById('orders-modal');
+        const title = document.getElementById('orders-modal-title');
+        const body = document.getElementById('orders-modal-body');
+        title.textContent = {'':'今日全部订单','pending':'待取餐订单','taken':'已取餐订单'}[status] || '订单列表';
+        body.innerHTML = '<div class="loading">加载中...</div>';
+        modal.classList.add('show');
+        try {
+            let url = `${API_BASE}/api/admin/orders?admin_id=${ADMIN_ID}`;
+            if (status) url += `&status=${status}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            if (data.success) {
+                if (data.data.length === 0) {
+                    body.innerHTML = '<div class="loading">暂无订单</div>';
+                    return;
+                }
+                let html = '<table><thead><tr><th>订单号</th><th>下单人</th><th>工号</th><th>菜品</th><th>数量</th><th>下单时间</th><th>取餐截止</th><th>取餐码</th><th>状态</th></tr></thead><tbody>';
+                data.data.forEach(o => {
+                    const ot = o.order_time ? o.order_time.substring(5,16) : '';
+                    const dl = o.take_deadline ? o.take_deadline.substring(5,16) : '';
+                    html += `<tr><td style="font-weight:600">${o.order_id}</td><td>${o.user_name}</td><td>${(o.user_id||'').replace('u_','')}</td><td>${o.dish_name}</td><td>${o.quantity}</td><td>${ot}</td><td>${dl}</td><td style="font-weight:600;color:var(--danger)">${o.pickup_code}</td><td><span class="status-badge ${o.status}">${getStatusText(o.status)}</span></td></tr>`;
+                });
+                html += '</tbody></table>';
+                body.innerHTML = html;
+            }
+        } catch (e) { body.innerHTML = '<div class="loading">加载失败</div>'; }
+    }
+
+    function closeOrdersModal() { document.getElementById('orders-modal').classList.remove('show'); }
+
+    // ===== 菜品管理 =====
+    async function addDish() {
+        const name = document.getElementById('dish-name').value.trim();
+        const stock = parseInt(document.getElementById('dish-stock').value);
+        const limit = parseInt(document.getElementById('dish-limit').value) || 5;
+        const nutrition = document.getElementById('dish-nutrition').value.trim();
+        const allergy = document.getElementById('dish-allergy').value.trim();
+        const alias = document.getElementById('dish-alias').value.trim();
+        if (!name || isNaN(stock)) { showMessage('dish-message','请填写菜品名称和库存','error'); return; }
+        try {
+            const resp = await fetch(`${API_BASE}/api/admin/add_dish`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({admin_id:ADMIN_ID, name, stock, limit_per_person:limit, nutrition_info:nutrition, allergy_tag:allergy, alias})
+            });
+            const data = await resp.json();
+            if (data.success) {
+                showMessage('dish-message', data.message, 'success');
+                ['dish-name','dish-stock','dish-limit','dish-nutrition','dish-allergy','dish-alias'].forEach(id => document.getElementById(id).value = '');
+                loadDishes();
+            } else { showMessage('dish-message', data.message, 'error'); }
+        } catch (e) { showMessage('dish-message','操作失败','error'); }
+    }
+
+    async function loadDishes() {
+        document.getElementById('dish-loading').classList.remove('hidden');
+        const list = document.getElementById('dish-list');
+        list.innerHTML = '';
+        try {
+            const resp = await fetch(`${API_BASE}/api/menu`);
+            const data = await resp.json();
+            if (data.success) {
+                data.data.forEach(d => {
+                    const stockClass = d.remaining <= 5 ? 'low-stock' : '';
+                    const item = document.createElement('div');
+                    item.className = 'dish-item';
+                    item.innerHTML = `
+                        <div class="info">
+                            <div class="name">${d.name}</div>
+                            <div class="meta">库存：<span class="${stockClass}">${d.remaining}</span> | 限购：${d.limit_per_person} 份 ${d.allergy_tag ? '| 过敏：'+d.allergy_tag : ''}</div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-sm" onclick="openEditModal('${d.name}',${d.remaining},${d.limit_per_person})">编辑</button>
+                            <button class="btn btn-sm btn-outline" onclick="restockDish('${d.name}')">补货</button>
+                            <button class="btn btn-sm btn-danger" onclick="removeDish('${d.name}')">下架</button>
+                        </div>`;
+                    list.appendChild(item);
+                });
+                if (data.data.length === 0) list.innerHTML = '<div class="loading">暂无菜品</div>';
+            }
+        } catch (e) { list.innerHTML = '<div class="loading">加载失败</div>'; }
+        document.getElementById('dish-loading').classList.add('hidden');
+    }
+
+    function openEditModal(name, stock, limit) {
+        document.getElementById('edit-name').value = name;
+        document.getElementById('edit-stock').value = stock;
+        document.getElementById('edit-limit').value = limit;
+        document.getElementById('edit-modal').classList.add('show');
+    }
+    function closeModal() { document.getElementById('edit-modal').classList.remove('show'); }
+
+    async function updateDish() {
+        const name = document.getElementById('edit-name').value;
+        const stock = parseInt(document.getElementById('edit-stock').value);
+        const limit = parseInt(document.getElementById('edit-limit').value);
+        try {
+            const r1 = await fetch(`${API_BASE}/api/admin/update_stock`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({admin_id:ADMIN_ID, name, new_stock:stock})
+            });
+            const r2 = await fetch(`${API_BASE}/api/admin/update_limit`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({admin_id:ADMIN_ID, name, new_limit:limit})
+            });
+            if (r1.ok && r2.ok) {
+                showMessage('dish-message','修改成功','success');
+                closeModal(); loadDishes();
+            } else { showMessage('dish-message','修改失败','error'); }
+        } catch (e) { showMessage('dish-message','操作失败','error'); }
+    }
+
+    async function removeDish(name) {
+        if (!confirm(`确定下架"${name}"？`)) return;
+        try {
+            const resp = await fetch(`${API_BASE}/api/admin/remove_dish`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({admin_id:ADMIN_ID, name})
+            });
+            const data = await resp.json();
+            showMessage('dish-message', data.message, data.success?'success':'error');
+            if (data.success) loadDishes();
+        } catch (e) { showMessage('dish-message','操作失败','error'); }
+    }
+
+    async function restockDish(name) {
+        const amount = parseInt(prompt(`补货数量：`));
+        if (isNaN(amount) || amount <= 0) return;
+        try {
+            const resp = await fetch(`${API_BASE}/api/admin/restock`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({admin_id:ADMIN_ID, name, amount})
+            });
+            const data = await resp.json();
+            showMessage('dish-message', data.message, data.success?'success':'error');
+            if (data.success) loadDishes();
+        } catch (e) { showMessage('dish-message','操作失败','error'); }
+    }
+
+    // ===== 订单管理 =====
+    async function loadOrders() {
+        const tbody = document.querySelector('#order-table tbody');
+        tbody.innerHTML = '<tr><td colspan="7" class="loading">加载中...</td></tr>';
+        try {
+            const resp = await fetch(`${API_BASE}/api/admin/orders?admin_id=${ADMIN_ID}`);
+            const data = await resp.json();
+            if (data.success) {
+                tbody.innerHTML = '';
+                if (data.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="loading">今日暂无订单</td></tr>';
+                    return;
+                }
+                data.data.forEach(o => {
+                    tbody.innerHTML += `<tr>
+                        <td style="font-weight:600">${o.order_id}</td>
+                        <td>${o.user_name}</td>
+                        <td>${o.dish_name}</td>
+                        <td>${o.quantity}</td>
+                        <td>${o.order_time ? o.order_time.substring(11,16) : ''}</td>
+                        <td><span class="status-badge ${o.status}">${getStatusText(o.status)}</span></td>
+                        <td>${o.status==='pending' ? `<button class="btn btn-sm btn-success" onclick="verifyOrderById('${o.order_id}')">核销</button> <button class="btn btn-sm btn-danger" onclick="cancelOrderById('${o.order_id}')">取消</button>` : ''}</td>
+                    </tr>`;
+                });
+            }
+        } catch (e) { tbody.innerHTML = '<tr><td colspan="7" class="loading">加载失败</td></tr>'; }
+    }
+
+    function searchOrders() { loadOrders(); }
+    function verifyOrderById(id) { document.getElementById('verify-order-id').value = id; verifyOrder(); }
+    function cancelOrderById(id) { document.getElementById('cancel-order-id').value = id; cancelOrder(); }
+
+    async function verifyOrder() {
+        const orderId = document.getElementById('verify-order-id').value.trim();
+        if (!orderId) { showMessage('verify-message','请输入订单号','error'); return; }
+        try {
+            const resp = await fetch(`${API_BASE}/api/verify_order`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({admin_id:ADMIN_ID, order_id:orderId})
+            });
+            const data = await resp.json();
+            showMessage('verify-message', data.message, data.success?'success':'error');
+            if (data.success) { document.getElementById('verify-order-id').value=''; loadOrders(); }
+        } catch (e) { showMessage('verify-message','操作失败','error'); }
+    }
+
+    async function cancelOrder() {
+        const orderId = document.getElementById('cancel-order-id').value.trim();
+        if (!orderId) { showMessage('cancel-message','请输入订单号','error'); return; }
+        if (!confirm(`确定取消订单"${orderId}"？`)) return;
+        try {
+            const resp = await fetch(`${API_BASE}/api/admin/cancel_order`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({admin_id:ADMIN_ID, order_id:orderId})
+            });
+            const data = await resp.json();
+            showMessage('cancel-message', data.message, data.success?'success':'error');
+            if (data.success) { document.getElementById('cancel-order-id').value=''; loadOrders(); }
+        } catch (e) { showMessage('cancel-message','操作失败','error'); }
+    }
+
+    // ===== 系统配置 =====
+    async function updateCutoff() {
+        const cutoffTime = document.getElementById('cutoff-time').value;
+        try {
+            const resp = await fetch(`${API_BASE}/api/admin/update_cutoff`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({admin_id:ADMIN_ID, cutoff_time:cutoffTime})
+            });
+            const data = await resp.json();
+            showMessage('config-message', data.message, data.success?'success':'error');
+        } catch (e) { showMessage('config-message','操作失败','error'); }
+    }
+
+    async function updateTakeTime() {
+        const takeStart = document.getElementById('take-start').value;
+        const takeEnd = document.getElementById('take-end').value;
+        if (takeStart >= takeEnd) { showMessage('config-message','取餐结束时间必须晚于开始时间','error'); return; }
+        try {
+            const resp = await fetch(`${API_BASE}/api/admin/update_take_time`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({admin_id:ADMIN_ID, take_start:takeStart, take_end:takeEnd})
+            });
+            const data = await resp.json();
+            showMessage('config-message', data.message, data.success?'success':'error');
+        } catch (e) { showMessage('config-message','操作失败','error'); }
+    }
+
+    async function processOvertime() {
+        try {
+            const resp = await fetch(`${API_BASE}/api/process_overtime`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({admin_id:ADMIN_ID})
+            });
+            const data = await resp.json();
+            showMessage('config-message', data.message, data.success?'success':'error');
+        } catch (e) { showMessage('config-message','操作失败','error'); }
+    }
+
+    // ===== 操作日志 =====
+    async function loadLogs() {
+        try {
+            const resp = await fetch(`${API_BASE}/api/admin/logs?admin_id=${ADMIN_ID}`);
+            const data = await resp.json();
+            if (data.success) {
+                const tbody = document.querySelector('#logs-table tbody');
+                tbody.innerHTML = '';
+                data.data.forEach(log => {
+                    tbody.innerHTML += `<tr><td>${log.created_at}</td><td>${log.admin_name}</td><td>${log.action}</td><td>${log.detail}</td></tr>`;
+                });
+                if (data.data.length === 0) tbody.innerHTML = '<tr><td colspan="4" class="loading">暂无操作日志</td></tr>';
+            }
+        } catch (e) { console.error('加载日志失败:', e); }
+    }
+
+    // 启动
+    window.addEventListener('DOMContentLoaded', checkAdminStatus);
+</script>
 </body>
 </html>
