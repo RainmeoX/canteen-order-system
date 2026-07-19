@@ -60,7 +60,7 @@ python server/app.py
 
 | 角色 | 入口 | 登录方式 |
 |------|------|---------|
-| 管理员 | http://localhost:5000/admin | ID 固定为 `admin_ma`（马静），前端已内置 |
+| 管理员 | http://localhost:5000/admin | ID 固定为 `admin`（马静），前端已内置 |
 | 普通用户 | http://localhost:5000 | 输入「姓名 + 工号」即可登录，系统会自动用工号生成 user_id |
 
 ## 功能特性
@@ -115,7 +115,7 @@ python server/app.py
 ## 常见问题
 
 **Q: 管理端所有操作都提示"无权限"？**
-A: 数据库未初始化。请先执行 `python database/init_db.py`，会自动创建管理员 `admin_ma`。
+A: 数据库未初始化。请先执行 `python database/init_db.py`，会自动创建管理员 `admin`。
 
 **Q: 用户下单提示"下单已截止"？**
 A: 默认截止时间是每日 10:00。请在管理端「系统配置」修改截止时间，或测试时改成 23:59。

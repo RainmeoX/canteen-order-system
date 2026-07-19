@@ -38,7 +38,7 @@ echo ""
 echo "=============================================="
 echo "  用户端: http://localhost:5000"
 echo "  管理端: http://localhost:5000/admin"
-echo "  管理员 ID: admin_ma"
+echo "  管理员 ID: admin"
 echo "=============================================="
 echo ""
 

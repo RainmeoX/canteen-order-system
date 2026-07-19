@@ -64,7 +64,7 @@ echo.
 echo 用户端地址: http://localhost:5000
 echo 管理端地址: http://localhost:5000/admin
 echo.
-echo 管理端默认管理员 ID: admin_ma
+echo 管理端默认管理员 ID: admin
 echo.
 echo 按 Ctrl+C 停止服务器（或关闭命令窗口）
 pause

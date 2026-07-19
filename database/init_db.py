@@ -119,7 +119,7 @@ def init_database():
     # 默认管理员账户
     cursor.execute('''
         INSERT OR IGNORE INTO users (user_id, name, employee_id, role, bind_status)
-        VALUES ('admin_ma', '马静', '0001', 'admin', 1)
+        VALUES ('admin', '马静', '0001', 'admin', 1)
     ''')
 
     # ============ 示例菜品数据 ============
