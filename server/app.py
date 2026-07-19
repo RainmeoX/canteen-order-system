@@ -13,14 +13,29 @@ from datetime import datetime
 
 # ============ 初始化与配置 ============
 
-app = Flask(__name__)
-CORS(app)
+# 项目根目录 & 客户端目录
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CLIENT_DIR = os.path.join(PROJECT_ROOT, 'client')
 
 # 数据库路径，优先从环境变量获取，否则使用默认路径
 DATABASE_PATH = os.environ.get(
     'CANTEEN_DB_PATH',
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'database', 'canteen.db')
+    os.path.join(PROJECT_ROOT, 'database', 'canteen.db')
 )
+
+# 启动时自动初始化数据库（确保 admin_ma 等基础数据存在）
+# 放在 Flask 初始化之前，避免 import 时数据库未就绪
+import sys as _sys
+_sys.path.insert(0, PROJECT_ROOT)
+try:
+    from database.init_db import init_database
+    init_database()
+except Exception as _e:
+    print(f'[WARN] 数据库初始化失败: {_e}')
+
+# Flask 初始化时直接指定静态目录，避免运行时修改 static_folder 不生效
+app = Flask(__name__, static_folder=CLIENT_DIR, static_url_path='')
+CORS(app)
 
 # ============ 数据库操作工具 ============
 
@@ -912,10 +927,6 @@ def process_overtime_orders():
 
 # ============ 静态资源服务 ============
 
-app.config['CLIENT_DIR'] = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client')
-app.static_folder = app.config['CLIENT_DIR']
-app.static_url_path = ''
-
 
 @app.route('/')
 def index():
@@ -930,10 +941,4 @@ def admin():
 
 
 if __name__ == '__main__':
-    # 启动前自动初始化数据库
-    import sys
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from database.init_db import init_database
-    init_database()
-    
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)

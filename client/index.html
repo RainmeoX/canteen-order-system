@@ -431,12 +431,8 @@
         </div>
 
         <div id="bind-section" class="card">
-            <div class="card-title">用户绑定</div>
+            <div class="card-title">用户登录</div>
             <div id="bind-message"></div>
-            <div class="form-group">
-                <label>用户ID（测试用）</label>
-                <input type="text" id="bind-user-id" placeholder="输入用户ID，如 user001">
-            </div>
             <div class="form-group">
                 <label>姓名</label>
                 <input type="text" id="bind-name" placeholder="请输入姓名">
@@ -445,7 +441,7 @@
                 <label>工号</label>
                 <input type="text" id="bind-employee-id" placeholder="请输入工号">
             </div>
-            <button class="btn" onclick="bindUser()">绑定</button>
+            <button class="btn" onclick="bindUser()">登录</button>
         </div>
 
         <div id="main-section" class="card hidden">
@@ -522,14 +518,16 @@
         }
 
         async function bindUser() {
-            const userId = document.getElementById('bind-user-id').value.trim();
             const name = document.getElementById('bind-name').value.trim();
             const employeeId = document.getElementById('bind-employee-id').value.trim();
 
-            if (!userId || !name || !employeeId) {
-                showMessage('bind-message', '请填写完整信息', 'error');
+            if (!name || !employeeId) {
+                showMessage('bind-message', '请填写姓名和工号', 'error');
                 return;
             }
+
+            // 用工号作为 user_id，用户无需自己编 ID
+            const userId = 'u_' + employeeId;
 
             try {
                 const response = await fetch(`${API_BASE}/api/bind`, {
@@ -549,7 +547,7 @@
                     showMessage('bind-message', data.message, 'error');
                 }
             } catch (error) {
-                showMessage('bind-message', '网络错误，请稍后重试', 'error');
+                showMessage('bind-message', '网络错误，请检查服务是否启动', 'error');
             }
         }
 
@@ -579,7 +577,6 @@
 
             document.getElementById('bind-section').classList.remove('hidden');
             document.getElementById('main-section').classList.add('hidden');
-            document.getElementById('bind-user-id').value = '';
             document.getElementById('bind-name').value = '';
             document.getElementById('bind-employee-id').value = '';
         }

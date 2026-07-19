@@ -5,15 +5,14 @@ echo    智能食堂预订系统 - 一键启动脚本
 echo ==============================================
 echo.
 
-:: 设置Python路径
-set PYTHON_PATH=C:\Users\LENOVO\python-sdk\python3.13.2\python.exe
+:: 优先使用 python，找不到再用 py 启动器，最后用写死路径
+set PYTHON_PATH=
+where python >nul 2>&1 && set PYTHON_PATH=python
+if not defined PYTHON_PATH where py >nul 2>&1 && set PYTHON_PATH=py
+if not defined PYTHON_PATH if exist "C:\Users\LENOVO\python-sdk\python3.13.2\python.exe" set PYTHON_PATH=C:\Users\LENOVO\python-sdk\python3.13.2\python.exe
 
-:: 检查Python是否存在
-if not exist "%PYTHON_PATH%" (
-    echo [错误] Python路径不存在
-    echo    %PYTHON_PATH%
-    echo.
-    echo 请检查Python安装路径并修改本脚本中的 PYTHON_PATH 变量
+if not defined PYTHON_PATH (
+    echo [错误] 未找到 Python，请先安装 Python 3.8+ 并加入 PATH
     pause
     exit /b 1
 )
@@ -26,7 +25,7 @@ if not exist "server\app.py" (
     exit /b 1
 )
 
-echo [OK] 环境检查通过
+echo [OK] 使用 Python: %PYTHON_PATH%
 echo.
 
 :: 安装依赖（首次运行）
@@ -37,6 +36,11 @@ if %errorlevel% equ 0 (
 ) else (
     echo [WARN] 依赖安装可能失败，请手动安装
 )
+echo.
+
+:: 初始化数据库（带示例菜品）
+echo [INFO] 初始化数据库...
+"%PYTHON_PATH%" database\init_db.py
 echo.
 
 :: 启动服务器
@@ -59,6 +63,8 @@ echo ==============================================
 echo.
 echo 用户端地址: http://localhost:5000
 echo 管理端地址: http://localhost:5000/admin
+echo.
+echo 管理端默认管理员 ID: admin_ma
 echo.
 echo 按 Ctrl+C 停止服务器（或关闭命令窗口）
 pause

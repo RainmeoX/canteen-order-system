@@ -122,6 +122,24 @@ def init_database():
         VALUES ('admin_ma', '马静', '0001', 'admin', 1)
     ''')
 
+    # ============ 示例菜品数据 ============
+    # 方便首次启动后直接看到效果，避免空菜单
+    sample_dishes = [
+        ('红烧肉', 50, 2, '{"cal": 350, "sugar": 5}', '', '红烧'),
+        ('宫保鸡丁', 40, 2, '{"cal": 280, "sugar": 8}', '花生', '宫保'),
+        ('鱼香肉丝', 35, 2, '{"cal": 300, "sugar": 10}', '', '鱼香'),
+        ('番茄炒蛋', 60, 3, '{"cal": 200, "sugar": 6}', '蛋', '番茄鸡蛋'),
+        ('麻婆豆腐', 45, 2, '{"cal": 250, "sugar": 3}', '', '麻婆'),
+        ('清蒸鲈鱼', 25, 1, '{"cal": 220, "sugar": 2}', '鱼', '鲈鱼'),
+        ('青椒土豆丝', 70, 3, '{"cal": 150, "sugar": 4}', '', '土豆'),
+        ('紫菜蛋花汤', 80, 5, '{"cal": 80, "sugar": 2}', '蛋', '汤'),
+    ]
+    for name, stock, limit, nutrition, allergy, alias in sample_dishes:
+        cursor.execute('''
+            INSERT OR IGNORE INTO dishes (name, remaining, limit_per_person, status, initial_stock, nutrition_info, allergy_tag, alias)
+            VALUES (?, ?, ?, '上架', ?, ?, ?, ?)
+        ''', (name, stock, limit, stock, nutrition, allergy, alias))
+
     conn.commit()
     conn.close()
     print(f"✅ 数据库初始化完成: {DATABASE_PATH}")

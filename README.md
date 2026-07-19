@@ -5,81 +5,97 @@
 ## 项目结构
 
 ```
-caidandemo/
+canteen-order-system/
 ├── database/
-│   ├── init_db.py
-│   └── canteen.db
+│   ├── init_db.py          # 数据库初始化（含示例菜品）
+│   └── canteen.db          # SQLite 数据库（自动生成）
 ├── server/
-│   ├── app.py
+│   ├── app.py              # Flask 后端服务
 │   └── requirements.txt
-└── client/
-    ├── index.html
-    └── admin.html
+├── client/
+│   ├── index.html          # 用户端页面
+│   └── admin.html          # 管理端页面
+├── start.bat               # Windows 一键启动
+├── start.sh                # Linux/Mac 一键启动
+└── README.md
 ```
 
 ## 技术栈
 
-- 后端: Python 3.x + Flask 2.3 + Flask-CORS
-- 数据库: SQLite (WAL模式)
-- 前端: HTML5 + CSS3 + JavaScript
+- 后端: Python 3.8+ / Flask 3.1 / Flask-CORS
+- 数据库: SQLite (WAL 模式)
+- 前端: HTML5 + CSS3 + 原生 JavaScript
+
+## 快速开始
+
+### Windows
+```bash
+# 双击 start.bat 即可
+# 或命令行执行
+start.bat
+```
+
+### Linux / Mac
+```bash
+./start.sh
+```
+
+### 手动启动
+```bash
+# 1. 安装依赖
+pip install flask flask-cors
+
+# 2. 初始化数据库（首次必须执行，会创建表 + 示例菜品 + 管理员）
+python database/init_db.py
+
+# 3. 启动服务
+python server/app.py
+```
+
+服务启动后：
+- 用户端: http://localhost:5000
+- 管理端: http://localhost:5000/admin
+
+## 默认账号
+
+| 角色 | 入口 | 登录方式 |
+|------|------|---------|
+| 管理员 | http://localhost:5000/admin | ID 固定为 `admin_ma`（马静），前端已内置 |
+| 普通用户 | http://localhost:5000 | 输入「姓名 + 工号」即可登录，系统会自动用工号生成 user_id |
 
 ## 功能特性
 
 ### 用户端
-- 用户身份绑定
-- 查看今日菜单
-- 菜品搜索
-- 在线下单
-- 查询个人订单
+- 用户登录（姓名 + 工号）
+- 查看今日菜单（含营养信息、过敏标签）
+- 菜品搜索（支持菜名 + 别名模糊匹配）
+- 在线下单（自动校验截止时间、库存、限购）
+- 查询今日订单 / 历史订单
+- 健康饮食建议（基于今日订单统计热量糖分）
+- 取餐提醒
 
 ### 管理端
-- 菜品管理
-- 订单管理
-- 系统配置
-- 数据统计
+- 数据概览（订单统计、热销菜品、低库存预警）
+- 菜品管理（上架 / 下架 / 改库存 / 补货 / 改限购）
+- 订单管理（核销 / 取消 / 列表查询）
+- 系统配置（下单截止时间、取餐时段）
 - 操作日志
-
-## 快速开始
-
-### 1. 安装依赖
-
-```bash
-cd server
-pip install -r requirements.txt
-```
-
-### 2. 初始化数据库
-
-```bash
-python database/init_db.py
-```
-
-### 3. 启动服务
-
-```bash
-cd server
-python app.py
-```
-
-服务运行在 http://localhost:5000
-
-### 4. 访问界面
-
-- 用户端: http://localhost:5000
-- 管理端: http://localhost:5000/admin
+- 超时订单处理
 
 ## API 接口
 
-### 用户端接口
+### 用户端
 | 接口 | 方法 | 说明 |
 |------|------|------|
-| `/api/bind` | POST | 用户绑定 |
-| `/api/menu` | GET | 获取菜单 |
+| `/api/bind` | POST | 用户登录/绑定 |
+| `/api/menu` | GET | 获取今日菜单 |
 | `/api/search_dish` | GET | 搜索菜品 |
 | `/api/order` | POST | 下单 |
-| `/api/user_orders` | GET | 查询订单 |
+| `/api/user_orders` | GET | 查询今日订单 |
+| `/api/user_orders/history` | GET | 查询历史订单 |
+| `/api/dietary_suggestion` | GET | 健康饮食建议 |
 
-### 管理端接口
+### 管理端（所有接口需传 `admin_id`）
 | 接口 | 方法 | 说明 |
 |------|------|------|
 | `/api/admin/add_dish` | POST | 上架菜品 |
@@ -90,30 +106,22 @@ python app.py
 | `/api/admin/update_cutoff` | POST | 修改截止时间 |
 | `/api/admin/update_take_time` | POST | 修改取餐时段 |
 | `/api/admin/cancel_order` | POST | 取消订单 |
-| `/api/admin/stats` | GET | 今日统计 |
+| `/api/admin/stats` | GET | 数据统计 |
+| `/api/admin/orders` | GET | 订单列表 |
 | `/api/admin/logs` | GET | 操作日志 |
 | `/api/verify_order` | POST | 核销订单 |
+| `/api/process_overtime` | POST | 处理超时订单 |
 
-## 数据库表结构
+## 常见问题
 
-- users: 用户表
-- dishes: 菜品表
-- orders: 订单表
-- system_config: 系统配置表
-- admin_logs: 管理员操作日志表
+**Q: 管理端所有操作都提示"无权限"？**
+A: 数据库未初始化。请先执行 `python database/init_db.py`，会自动创建管理员 `admin_ma`。
 
-## 配置说明
+**Q: 用户下单提示"下单已截止"？**
+A: 默认截止时间是每日 10:00。请在管理端「系统配置」修改截止时间，或测试时改成 23:59。
 
-系统配置项:
-- order_cutoff_time: 下单截止时间 (默认 10:00)
-- take_start: 取餐开始时间 (默认 11:30)
-- take_end: 取餐结束时间 (默认 12:30)
+**Q: 启动报错 `ModuleNotFoundError: No module named 'flask'`？**
+A: 执行 `pip install flask flask-cors` 安装依赖。
 
-默认管理员:
-- user_id: admin_ma
-- name: 马静
-- employee_id: 0001
-
-## License
-
-MIT License
+**Q: 想重置数据库？**
+A: 删除 `database/canteen.db` 文件，再执行 `python database/init_db.py`。
