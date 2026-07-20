@@ -7,19 +7,36 @@
     <style>
         :root {
             --bg: #ffffff;
-            --bg-soft: #f7f7f7;
+            --bg-soft: #eef2f7;
             --bg-card: #ffffff;
-            --fg: #1a1a1a;
-            --fg-soft: #666;
-            --fg-muted: #999;
-            --border: #eee;
-            --accent: #1a1a1a;
+            --fg: #1a202c;
+            --fg-soft: #4a5568;
+            --fg-muted: #a0aec0;
+            --border: #e2e8f0;
+            --accent: #2563eb;
             --accent-fg: #fff;
+            --accent-light: #dbeafe;
             --danger: #dc2626;
             --success: #16a34a;
             --warning: #f59e0b;
             --shadow: 0 2px 8px rgba(0,0,0,0.06);
             --radius: 12px;
+        }
+        [data-theme="dark"] {
+            --bg: #1a1b2e;
+            --bg-soft: #12132a;
+            --bg-card: #232447;
+            --fg: #e2e8f0;
+            --fg-soft: #a0aec0;
+            --fg-muted: #718096;
+            --border: #2d2f5e;
+            --accent: #3b82f6;
+            --accent-fg: #fff;
+            --accent-light: #1e3a5f;
+            --danger: #f87171;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
         body {
@@ -167,12 +184,38 @@
             .order-card { margin-bottom: 0; }
             .cart-bar { max-width: 1200px; }
         }
+
+        /* 夜间模式适配 */
+        [data-theme="dark"] .order-card .status.pending { background: #78350f; color: #fde68a; }
+        [data-theme="dark"] .order-card .status.taken { background: #064e3b; color: #6ee7b7; }
+        [data-theme="dark"] .order-card .status.cancelled { background: #7f1d1d; color: #fca5a5; }
+        [data-theme="dark"] .order-card .status.overtime { background: #374151; color: #9ca3af; }
+        [data-theme="dark"] .msg.error { background: #7f1d1d; color: #fca5a5; }
+        [data-theme="dark"] .suggestion { background: #78350f; color: #fde68a; }
+        [data-theme="dark"] .health-card .cal-bar .bar { background: #2d2f5e; }
+        [data-theme="dark"] .recommend-item { background: #2d2f5e; }
+        [data-theme="dark"] .dish-card .tag.allergy { background: #7f1d1d; color: #fca5a5; }
+
+        .theme-toggle {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--fg);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        .theme-toggle:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
     </style>
 </head>
 <body>
 <div class="app">
     <!-- 登录页 -->
     <div id="login-page" class="login-page">
+        <button class="theme-toggle" id="theme-toggle-login" onclick="toggleTheme()" title="切换主题" style="position:fixed;top:16px;right:16px;z-index:10">☀</button>
         <div class="login-logo">
             <div class="icon">🍽️</div>
             <h1>食堂预订</h1>
@@ -201,7 +244,10 @@
                     <div class="sub" id="user-empid">工号: 1001</div>
                 </div>
             </div>
-            <div class="logout" onclick="logout()">退出</div>
+            <div style="display:flex;align-items:center;gap:10px">
+                <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="切换主题">☀</button>
+                <div class="logout" onclick="logout()">退出</div>
+            </div>
         </div>
 
         <div class="tabs">
@@ -270,6 +316,30 @@
     let currentCategory = '全部';
 
     function $(id) { return document.getElementById(id); }
+
+    // 主题切换
+    function toggleTheme() {
+        const html = document.documentElement;
+        const isDark = html.getAttribute('data-theme') === 'dark';
+        html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        localStorage.setItem('canteen_theme', isDark ? 'light' : 'dark');
+        updateThemeIcon();
+    }
+    function updateThemeIcon() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const icon = isDark ? '🌙' : '☀';
+        const btn1 = $('theme-toggle');
+        const btn2 = $('theme-toggle-login');
+        if (btn1) btn1.textContent = icon;
+        if (btn2) btn2.textContent = icon;
+    }
+    function initTheme() {
+        const saved = localStorage.getItem('canteen_theme');
+        if (saved) {
+            document.documentElement.setAttribute('data-theme', saved);
+        }
+        updateThemeIcon();
+    }
 
     function showMsg(el, msg, type) {
         el.innerHTML = `<div class="msg ${type}">${msg}</div>`;
@@ -551,6 +621,7 @@
 
     // ===== 启动 =====
     window.addEventListener('DOMContentLoaded', () => {
+        initTheme();
         const saved = localStorage.getItem('canteen_user');
         if (saved) {
             currentUser = JSON.parse(saved);

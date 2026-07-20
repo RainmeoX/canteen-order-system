@@ -7,14 +7,15 @@
     <style>
         :root {
             --bg: #ffffff;
-            --bg-soft: #f7f7f7;
+            --bg-soft: #eef2f7;
             --bg-card: #ffffff;
-            --fg: #1a1a1a;
-            --fg-soft: #666;
-            --fg-muted: #999;
-            --border: #eee;
-            --accent: #1a1a1a;
+            --fg: #1a202c;
+            --fg-soft: #4a5568;
+            --fg-muted: #a0aec0;
+            --border: #e2e8f0;
+            --accent: #2563eb;
             --accent-fg: #fff;
+            --accent-light: #dbeafe;
             --danger: #dc2626;
             --success: #16a34a;
             --warning: #f59e0b;
@@ -22,6 +23,23 @@
             --shadow-lg: 0 4px 16px rgba(0,0,0,0.1);
             --radius: 12px;
             --sidebar-w: 220px;
+        }
+        [data-theme="dark"] {
+            --bg: #1a1b2e;
+            --bg-soft: #12132a;
+            --bg-card: #232447;
+            --fg: #e2e8f0;
+            --fg-soft: #a0aec0;
+            --fg-muted: #718096;
+            --border: #2d2f5e;
+            --accent: #3b82f6;
+            --accent-fg: #fff;
+            --accent-light: #1e3a5f;
+            --danger: #f87171;
+            --success: #34d399;
+            --warning: #fbbf24;
+            --shadow: 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
         }
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
         body {
@@ -108,6 +126,30 @@
         .status-badge.taken { background: #f0fdf4; color: var(--success); }
         .status-badge.cancelled { background: #fef2f2; color: var(--danger); }
         .status-badge.overtime { background: #f5f5f5; color: var(--fg-muted); }
+        [data-theme="dark"] .status-badge.pending { background: #78350f; color: #fde68a; }
+        [data-theme="dark"] .status-badge.taken { background: #064e3b; color: #6ee7b7; }
+        [data-theme="dark"] .status-badge.cancelled { background: #7f1d1d; color: #fca5a5; }
+        [data-theme="dark"] .status-badge.overtime { background: #374151; color: #9ca3af; }
+        [data-theme="dark"] .msg.error { background: #7f1d1d; color: #fca5a5; }
+        [data-theme="dark"] .msg.success { background: #064e3b; color: #6ee7b7; }
+        [data-theme="dark"] .sidebar { background: #1e1f3a; }
+        [data-theme="dark"] .sidebar .brand { border-bottom-color: rgba(255,255,255,0.08); }
+        [data-theme="dark"] .sidebar-nav a { color: rgba(255,255,255,0.7); }
+        [data-theme="dark"] .sidebar-nav a:hover, [data-theme="dark"] .sidebar-nav a.active { color: #fff; }
+
+        .theme-toggle {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--fg);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        .theme-toggle:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
 
         /* 菜品列表 */
         .dish-item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
@@ -171,6 +213,7 @@
 
 <!-- 绑定页 -->
 <div id="bind-page" class="bind-page">
+    <button class="theme-toggle" id="theme-toggle-login" onclick="toggleTheme()" title="切换主题" style="position:fixed;top:16px;right:16px;z-index:10">☀</button>
     <div class="bind-card">
         <div class="bind-logo">
             <div class="icon">⚙️</div>
@@ -225,6 +268,7 @@
                 <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
                 <h1 id="page-title">数据概览</h1>
             </div>
+            <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="切换主题">☀</button>
         </div>
         <div class="content">
             <!-- 数据概览 -->
@@ -394,6 +438,31 @@
     const ADMIN_ID = 'admin';
 
     function $(id) { return document.getElementById(id); }
+
+    // 主题切换
+    function toggleTheme() {
+        const html = document.documentElement;
+        const isDark = html.getAttribute('data-theme') === 'dark';
+        html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        localStorage.setItem('canteen_theme', isDark ? 'light' : 'dark');
+        updateThemeIcon();
+    }
+    function updateThemeIcon() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const icon = isDark ? '🌙' : '☀';
+        const btn1 = $('theme-toggle');
+        const btn2 = $('theme-toggle-login');
+        if (btn1) btn1.textContent = icon;
+        if (btn2) btn2.textContent = icon;
+    }
+    function initTheme() {
+        const saved = localStorage.getItem('canteen_theme');
+        if (saved) {
+            document.documentElement.setAttribute('data-theme', saved);
+        }
+        updateThemeIcon();
+    }
+
     function showMsg(el, msg, type) {
         el.innerHTML = `<div class="msg ${type}">${msg}</div>`;
         setTimeout(() => el.innerHTML = '', 3000);
@@ -742,7 +811,7 @@
         } catch (e) {}
     }
 
-    window.addEventListener('DOMContentLoaded', checkStatus);
+    window.addEventListener('DOMContentLoaded', () => { initTheme(); checkStatus(); });
 </script>
 </body>
 </html>
