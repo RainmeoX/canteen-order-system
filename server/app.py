@@ -326,23 +326,23 @@ def place_order():
         if cursor.rowcount == 0:
             raise Exception('库存被抢光')
 
-        # 生成订单号
-        cursor.execute('SELECT COUNT(*) as count FROM orders WHERE DATE(order_time) = DATE("now")')
+        # 生成订单号（同一批次下单共用一个订单号）
+        cursor.execute('SELECT COUNT(DISTINCT order_no) as count FROM orders WHERE DATE(order_time) = DATE("now")')
         order_count = cursor.fetchone()['count']
-        order_id = f"D{datetime.now().strftime('%Y%m%d')}{str(order_count + 1).zfill(4)}"
+        order_no = f"D{datetime.now().strftime('%Y%m%d')}{str(order_count + 1).zfill(4)}"
 
         # 设置取餐截止时间
         take_end = get_config('take_end')
         take_deadline = f"{datetime.now().strftime('%Y-%m-%d')} {take_end}"
 
         # 生成取餐码
-        pickup_code = f"{user['employee_id'][-4:]}+{order_id[-3:]}"
+        pickup_code = f"{user['employee_id'][-4:]}+{order_no[-3:]}"
 
         # 插入订单记录
         cursor.execute('''
-            INSERT INTO orders (id, user_id, dish_name, quantity, order_time, take_deadline, status, pickup_code)
-            VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?)
-        ''', (order_id, user_id, dish_name, quantity, take_deadline, pickup_code))
+            INSERT INTO orders (order_no, user_id, dish_name, quantity, order_time, take_deadline, status, pickup_code, unit_price, total_price)
+            VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?, ?, ?)
+        ''', (order_no, user_id, dish_name, quantity, take_deadline, pickup_code, dish['price'], dish['price'] * quantity))
 
         conn.commit()
 
@@ -351,7 +351,8 @@ def place_order():
         return jsonify({
             'success': True,
             'message': f'✅ 下单成功！\n您预订了：{dish_name} ×{quantity}\n取餐时间：今日 {take_start}-{take_end}\n取餐地点：食堂一楼大厅\n取餐凭证：{pickup_code}',
-            'order_id': order_id,
+            'order_id': order_no,
+            'order_no': order_no,
             'pickup_code': pickup_code,
             'take_time': f'{take_start}-{take_end}'
         })
@@ -389,11 +390,16 @@ def order_batch():
 
     try:
         conn.execute('BEGIN')
-        order_ids = []
         total_price = 0
         take_end = get_config('take_end')
         take_start = get_config('take_start')
         take_deadline = f"{datetime.now().strftime('%Y-%m-%d')} {take_end}"
+
+        # 同一批次下单共用一个订单号
+        cursor.execute('SELECT COUNT(DISTINCT order_no) as count FROM orders WHERE DATE(order_time) = DATE("now")')
+        order_count = cursor.fetchone()['count']
+        order_no = f"D{datetime.now().strftime('%Y%m%d')}{str(order_count + 1).zfill(4)}"
+        pickup_code = f"{user['employee_id'][-4:]}+{order_no[-3:]}"
 
         for item in items:
             dish_name = item.get('dish_name')
@@ -424,26 +430,23 @@ def order_batch():
             if cursor.rowcount == 0:
                 raise Exception(f'"{dish_name}" 库存被抢光')
 
-            # 生成订单号
-            cursor.execute('SELECT COUNT(*) as count FROM orders WHERE DATE(order_time) = DATE("now")')
-            order_count = cursor.fetchone()['count']
-            order_id = f"D{datetime.now().strftime('%Y%m%d')}{str(order_count + 1).zfill(4)}"
-            pickup_code = f"{user['employee_id'][-4:]}+{order_id[-3:]}"
-
+            # 插入订单记录（共用同一个 order_no）
             cursor.execute('''
-                INSERT INTO orders (id, user_id, dish_name, quantity, order_time, take_deadline, status, pickup_code, remark, total_price)
-                VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?, ?, ?)
-            ''', (order_id, user_id, dish_name, quantity, take_deadline, pickup_code, remark, dish['price'] * quantity))
+                INSERT INTO orders (order_no, user_id, dish_name, quantity, order_time, take_deadline, status, pickup_code, remark, unit_price, total_price)
+                VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?, ?, ?, ?)
+            ''', (order_no, user_id, dish_name, quantity, take_deadline, pickup_code, remark, dish['price'], dish['price'] * quantity))
 
-            order_ids.append(order_id)
             total_price += dish['price'] * quantity
 
         conn.commit()
         return jsonify({
             'success': True,
-            'message': f'下单成功！共 {len(order_ids)} 个订单，合计 ¥{total_price:.2f}',
-            'order_ids': order_ids,
+            'message': f'下单成功！订单号 {order_no}，合计 ¥{total_price:.2f}',
+            'order_id': order_no,
+            'order_no': order_no,
+            'order_ids': [order_no],
             'total_price': total_price,
+            'pickup_code': pickup_code,
             'take_time': f'{take_start}-{take_end}'
         })
     except Exception as e:
@@ -453,7 +456,7 @@ def order_batch():
 
 @app.route('/api/user_orders', methods=['GET'])
 def get_user_orders():
-    """查询用户今日订单"""
+    """查询用户今日订单（按 order_no 分组）"""
     user_id = request.args.get('user_id')
     if not user_id:
         return jsonify({'success': False, 'message': '缺少参数'}), 400
@@ -462,32 +465,44 @@ def get_user_orders():
     cursor = conn.cursor()
 
     cursor.execute('''
-        SELECT o.id, o.dish_name, o.quantity, o.order_time, o.take_deadline, o.status, o.pickup_code, o.total_price, o.remark, u.name
+        SELECT o.order_no, o.dish_name, o.quantity, o.order_time, o.take_deadline,
+               o.status, o.pickup_code, o.total_price, o.remark, o.unit_price, u.name
         FROM orders o JOIN users u ON o.user_id = u.user_id
         WHERE o.user_id = ? AND DATE(o.order_time) = DATE('now')
         ORDER BY o.order_time DESC
     ''', (user_id,))
 
-    orders = []
+    # 按 order_no 分组
+    grouped = {}
     for row in cursor.fetchall():
-        orders.append({
-            'order_id': row['id'],
+        no = row['order_no']
+        if no not in grouped:
+            grouped[no] = {
+                'order_id': no,
+                'order_no': no,
+                'items': [],
+                'order_time': row['order_time'],
+                'take_deadline': row['take_deadline'],
+                'status': row['status'],
+                'pickup_code': row['pickup_code'],
+                'remark': row['remark'],
+                'total_price': 0,
+                'user_name': row['name']
+            }
+        grouped[no]['items'].append({
             'dish_name': row['dish_name'],
             'quantity': row['quantity'],
-            'order_time': row['order_time'],
-            'take_deadline': row['take_deadline'],
-            'status': row['status'],
-            'pickup_code': row['pickup_code'],
-            'total_price': row['total_price'],
-            'remark': row['remark']
+            'unit_price': row['unit_price'],
+            'subtotal': row['total_price']
         })
+        grouped[no]['total_price'] += row['total_price']
 
-    return jsonify({'success': True, 'data': orders})
+    return jsonify({'success': True, 'data': list(grouped.values())})
 
 
 @app.route('/api/user_orders/history', methods=['GET'])
 def get_user_order_history():
-    """查询用户历史订单（支持日期范围筛选）"""
+    """查询用户历史订单（按 order_no 分组，支持日期范围筛选）"""
     user_id = request.args.get('user_id')
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
@@ -499,7 +514,8 @@ def get_user_order_history():
     cursor = conn.cursor()
 
     query = '''
-        SELECT o.id, o.dish_name, o.quantity, o.order_time, o.take_deadline, o.status, o.pickup_code
+        SELECT o.order_no, o.dish_name, o.quantity, o.order_time, o.take_deadline,
+               o.status, o.pickup_code, o.total_price, o.remark, o.unit_price
         FROM orders o
         WHERE o.user_id = ?
     '''
@@ -513,23 +529,37 @@ def get_user_order_history():
         query += ' AND DATE(o.order_time) <= ?'
         params.append(end_date)
 
-    query += ' ORDER BY o.order_time DESC LIMIT 50'
+    query += ' ORDER BY o.order_time DESC LIMIT 200'
 
     cursor.execute(query, params)
 
-    orders = []
+    # 按 order_no 分组
+    grouped = {}
+    order_seq = []
     for row in cursor.fetchall():
-        orders.append({
-            'order_id': row['id'],
+        no = row['order_no']
+        if no not in grouped:
+            grouped[no] = {
+                'order_id': no,
+                'order_no': no,
+                'items': [],
+                'order_time': row['order_time'],
+                'take_deadline': row['take_deadline'],
+                'status': row['status'],
+                'pickup_code': row['pickup_code'],
+                'remark': row['remark'],
+                'total_price': 0
+            }
+            order_seq.append(no)
+        grouped[no]['items'].append({
             'dish_name': row['dish_name'],
             'quantity': row['quantity'],
-            'order_time': row['order_time'],
-            'take_deadline': row['take_deadline'],
-            'status': row['status'],
-            'pickup_code': row['pickup_code']
+            'unit_price': row['unit_price'],
+            'subtotal': row['total_price']
         })
+        grouped[no]['total_price'] += row['total_price']
 
-    return jsonify({'success': True, 'data': orders})
+    return jsonify({'success': True, 'data': [grouped[no] for no in order_seq]})
 
 
 @app.route('/api/dietary_suggestion', methods=['GET'])
@@ -616,19 +646,20 @@ def verify_order():
     if not admin or admin['role'] != 'admin':
         return jsonify({'success': False, 'message': '无权限执行此操作'}), 403
 
-    # 验证订单存在且待取餐
-    cursor.execute('SELECT * FROM orders WHERE id = ? AND status = "pending"', (order_id,))
-    order = cursor.fetchone()
-    if not order:
+    # 验证订单存在且待取餐（按 order_no 核销整个订单的所有菜品）
+    cursor.execute('SELECT * FROM orders WHERE order_no = ? AND status = "pending"', (order_id,))
+    orders = cursor.fetchall()
+    if not orders:
         return jsonify({'success': False, 'message': '订单不存在或已核销'}), 404
 
-    # 更新订单状态
-    cursor.execute('UPDATE orders SET status = "taken" WHERE id = ?', (order_id,))
+    # 更新该订单号下所有菜品的状态
+    cursor.execute('UPDATE orders SET status = "taken" WHERE order_no = ? AND status = "pending"', (order_id,))
     conn.commit()
 
-    log_admin_action(admin_id, '核销订单', f'订单号: {order_id}, 菜品: {order["dish_name"]}, 数量: {order["quantity"]}')
+    dish_summary = '、'.join([f'{o["dish_name"]}×{o["quantity"]}' for o in orders])
+    log_admin_action(admin_id, '核销订单', f'订单号: {order_id}, 菜品: {dish_summary}')
 
-    return jsonify({'success': True, 'message': f'✅ 核销成功！订单 {order_id} 已完成'})
+    return jsonify({'success': True, 'message': f'✅ 核销成功！订单 {order_id} 已完成（共 {len(orders)} 个菜品）'})
 
 
 @app.route('/api/admin/add_dish', methods=['POST'])
@@ -897,10 +928,10 @@ def cancel_order():
     if not admin or admin['role'] != 'admin':
         return jsonify({'success': False, 'message': '无权限执行此操作'}), 403
 
-    # 验证订单存在且待处理
-    cursor.execute('SELECT * FROM orders WHERE id = ? AND status = "pending"', (order_id,))
-    order = cursor.fetchone()
-    if not order:
+    # 验证订单存在且待处理（按 order_no 取消整个订单的所有菜品）
+    cursor.execute('SELECT * FROM orders WHERE order_no = ? AND status = "pending"', (order_id,))
+    orders = cursor.fetchall()
+    if not orders:
         return jsonify({'success': False, 'message': '订单不存在或已处理'}), 404
 
     # 验证未过截止时间
@@ -912,18 +943,20 @@ def cancel_order():
     try:
         conn.execute('BEGIN')
 
-        # 更新订单状态为已取消
-        cursor.execute('UPDATE orders SET status = "cancelled" WHERE id = ?', (order_id,))
+        # 更新该订单号下所有菜品状态为已取消
+        cursor.execute('UPDATE orders SET status = "cancelled" WHERE order_no = ? AND status = "pending"', (order_id,))
 
-        # 恢复库存
-        cursor.execute('UPDATE dishes SET remaining = remaining + ? WHERE name = ?',
-                      (order['quantity'], order['dish_name']))
+        # 恢复每个菜品的库存
+        for order in orders:
+            cursor.execute('UPDATE dishes SET remaining = remaining + ? WHERE name = ?',
+                          (order['quantity'], order['dish_name']))
 
         conn.commit()
 
-        log_admin_action(admin_id, '取消订单', f'订单号: {order_id}, 菜品: {order["dish_name"]}, 数量: {order["quantity"]}')
+        dish_summary = '、'.join([f'{o["dish_name"]}×{o["quantity"]}' for o in orders])
+        log_admin_action(admin_id, '取消订单', f'订单号: {order_id}, 菜品: {dish_summary}')
 
-        return jsonify({'success': True, 'message': f'✅ 订单 {order_id} 已取消，库存已恢复'})
+        return jsonify({'success': True, 'message': f'✅ 订单 {order_id} 已取消，库存已恢复（共 {len(orders)} 个菜品）'})
     except Exception as e:
         conn.execute('ROLLBACK')
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -946,16 +979,16 @@ def get_stats():
     if not admin or admin['role'] != 'admin':
         return jsonify({'success': False, 'message': '无权限执行此操作'}), 403
 
-    # 今日订单总数
-    cursor.execute('SELECT COUNT(*) as total FROM orders WHERE DATE(order_time) = DATE("now")')
+    # 今日订单总数（按 order_no 去重统计）
+    cursor.execute('SELECT COUNT(DISTINCT order_no) as total FROM orders WHERE DATE(order_time) = DATE("now")')
     total_orders = cursor.fetchone()['total']
 
-    # 待取餐订单数
-    cursor.execute('SELECT COUNT(*) as cnt FROM orders WHERE DATE(order_time) = DATE("now") AND status = "pending"')
+    # 待取餐订单数（按 order_no 去重统计）
+    cursor.execute('SELECT COUNT(DISTINCT order_no) as cnt FROM orders WHERE DATE(order_time) = DATE("now") AND status = "pending"')
     pending_orders = cursor.fetchone()['cnt']
 
-    # 已取餐订单数
-    cursor.execute('SELECT COUNT(*) as cnt FROM orders WHERE DATE(order_time) = DATE("now") AND status = "taken"')
+    # 已取餐订单数（按 order_no 去重统计）
+    cursor.execute('SELECT COUNT(DISTINCT order_no) as cnt FROM orders WHERE DATE(order_time) = DATE("now") AND status = "taken"')
     taken_orders = cursor.fetchone()['cnt']
 
     # 今日营业额（已取餐 + 待取餐，不含取消和超时）
@@ -1012,7 +1045,9 @@ def get_all_orders():
         return jsonify({'success': False, 'message': '无权限执行此操作'}), 403
 
     query = '''
-        SELECT o.id, o.user_id, o.dish_name, o.quantity, o.order_time, o.take_deadline, o.status, o.pickup_code, o.total_price, o.remark, u.name as user_name, u.employee_id
+        SELECT o.order_no, o.user_id, o.dish_name, o.quantity, o.order_time, o.take_deadline,
+               o.status, o.pickup_code, o.total_price, o.remark, o.unit_price,
+               u.name as user_name, u.employee_id
         FROM orders o JOIN users u ON o.user_id = u.user_id
         WHERE DATE(o.order_time) = DATE('now')
     '''
@@ -1026,24 +1061,36 @@ def get_all_orders():
 
     cursor.execute(query, params)
 
-    orders = []
+    # 按 order_no 分组
+    grouped = {}
+    order_seq = []
     for row in cursor.fetchall():
-        orders.append({
-            'order_id': row['id'],
-            'user_id': row['user_id'],
-            'user_name': row['user_name'],
-            'employee_id': row['employee_id'],
+        no = row['order_no']
+        if no not in grouped:
+            grouped[no] = {
+                'order_id': no,
+                'order_no': no,
+                'user_id': row['user_id'],
+                'user_name': row['user_name'],
+                'employee_id': row['employee_id'],
+                'items': [],
+                'order_time': row['order_time'],
+                'take_deadline': row['take_deadline'],
+                'status': row['status'],
+                'pickup_code': row['pickup_code'],
+                'remark': row['remark'],
+                'total_price': 0
+            }
+            order_seq.append(no)
+        grouped[no]['items'].append({
             'dish_name': row['dish_name'],
             'quantity': row['quantity'],
-            'order_time': row['order_time'],
-            'take_deadline': row['take_deadline'],
-            'status': row['status'],
-            'pickup_code': row['pickup_code'],
-            'total_price': row['total_price'],
-            'remark': row['remark']
+            'unit_price': row['unit_price'],
+            'subtotal': row['total_price']
         })
+        grouped[no]['total_price'] += row['total_price']
 
-    return jsonify({'success': True, 'data': orders})
+    return jsonify({'success': True, 'data': [grouped[no] for no in order_seq]})
 
 
 @app.route('/api/admin/logs', methods=['GET'])
@@ -1111,16 +1158,19 @@ def process_overtime_orders():
     try:
         conn.execute('BEGIN')
 
+        # 按 order_no 分组处理，统计订单数
+        order_nos = set()
         for order in overtime_orders:
             # 标记为超时
             cursor.execute('UPDATE orders SET status = "overtime" WHERE id = ?', (order['id'],))
             # 恢复库存
             cursor.execute('UPDATE dishes SET remaining = remaining + ? WHERE name = ?',
                           (order['quantity'], order['dish_name']))
+            order_nos.add(order['order_no'])
 
         conn.commit()
 
-        return jsonify({'success': True, 'message': f'已处理 {len(overtime_orders)} 个超时订单，库存已释放'})
+        return jsonify({'success': True, 'message': f'已处理 {len(order_nos)} 个超时订单（{len(overtime_orders)} 个菜品），库存已释放'})
     except Exception as e:
         conn.execute('ROLLBACK')
         return jsonify({'success': False, 'message': str(e)}), 500

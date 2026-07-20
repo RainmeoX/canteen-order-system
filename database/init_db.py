@@ -48,10 +48,11 @@ def init_database():
         )
     ''')
 
-    # 订单表（新增 remark, total_price）
+    # 订单表（id 改为自增主键，order_no 为订单号，同一批次下单共用一个 order_no）
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS orders (
-            id TEXT PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_no TEXT NOT NULL,
             user_id TEXT NOT NULL,
             dish_name TEXT NOT NULL,
             quantity INTEGER NOT NULL,
@@ -87,6 +88,7 @@ def init_database():
     ''')
 
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_orders_user_date ON orders (user_id, DATE(order_time))')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_orders_order_no ON orders (order_no)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_dishes_name_status ON dishes (name, status)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_dishes_category ON dishes (category, status)')
 
@@ -130,7 +132,7 @@ def init_database():
 
     conn.commit()
     conn.close()
-    print(f"✅ 数据库初始化完成: {DATABASE_PATH}")
+    print(f"[OK] 数据库初始化完成: {DATABASE_PATH}")
 
 
 if __name__ == '__main__':

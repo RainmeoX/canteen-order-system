@@ -30,7 +30,8 @@
             font-size: 14px;
             line-height: 1.5;
         }
-        .app { max-width: 500px; margin: 0 auto; min-height: 100vh; background: var(--bg-soft); position: relative; }
+        .app { min-height: 100vh; background: var(--bg-soft); position: relative; }
+        .app-inner { max-width: 500px; margin: 0 auto; min-height: 100vh; position: relative; }
 
         /* 登录页 */
         .login-page { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 30px; background: var(--bg); }
@@ -156,7 +157,15 @@
 
         /* 响应式：桌面端 */
         @media (min-width: 768px) {
-            .app { max-width: 480px; box-shadow: 0 0 40px rgba(0,0,0,0.08); }
+            .app-inner { max-width: 1200px; margin: 0 auto; }
+            .menu-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; padding: 20px; }
+            .dish-card { flex-direction: column; padding: 16px; }
+            .dish-card .emoji { width: 100%; height: 100px; font-size: 48px; }
+            .dish-card .info { text-align: center; }
+            .dish-card .bottom { flex-direction: column; gap: 10px; }
+            .order-list { padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+            .order-card { margin-bottom: 0; }
+            .cart-bar { max-width: 1200px; }
         }
     </style>
 </head>
@@ -183,6 +192,7 @@
 
     <!-- 主界面 -->
     <div id="main" class="main">
+        <div class="app-inner">
         <div class="topbar">
             <div class="user">
                 <div class="avatar" id="user-avatar">张</div>
@@ -228,6 +238,7 @@
         <!-- 健康 -->
         <div id="tab-health" style="display:none">
             <div id="health-content"></div>
+        </div>
         </div>
     </div>
 
@@ -426,13 +437,15 @@
     }
 
     function showSuccessModal(data) {
+        const orderNo = data.order_no || (data.order_ids && data.order_ids[0]) || '';
+        const pickupTail = data.pickup_code ? data.pickup_code.split('+')[1] : orderNo.slice(-3);
         $('success-detail').innerHTML = `
             <div class="success-info">
-                <div class="row"><span>订单数</span><span class="val">${data.order_ids.length} 个</span></div>
+                <div class="row"><span>订单号</span><span class="val">${orderNo}</span></div>
                 <div class="row"><span>合计金额</span><span class="val">¥${data.total_price.toFixed(2)}</span></div>
                 <div class="row"><span>取餐时间</span><span class="val">今日 ${data.take_time}</span></div>
                 <div class="row"><span>取餐地点</span><span class="val">食堂一楼大厅</span></div>
-                <div class="pickup">${data.order_ids[0].slice(-3)}</div>
+                <div class="pickup">${pickupTail}</div>
                 <div style="text-align:center;font-size:12px;color:var(--fg-muted);margin-top:4px">取餐码尾号</div>
             </div>`;
         $('success-modal').classList.add('active');
@@ -456,21 +469,29 @@
         const list = $(container);
         if (orders.length === 0) { list.innerHTML = '<div class="empty"><div class="icon">📋</div>暂无订单</div>'; return; }
         const statusMap = {pending:'待取餐', taken:'已取餐', cancelled:'已取消', overtime:'超时未取'};
-        list.innerHTML = orders.map(o => `
+        list.innerHTML = orders.map(o => {
+            // 支持按 order_no 分组的订单结构（含 items 数组）
+            const items = o.items || [{dish_name: o.dish_name, quantity: o.quantity, subtotal: o.total_price}];
+            const itemsHtml = items.map(it => `
+                <div class="dish-row"><span>${it.dish_name}</span><span class="qty">×${it.quantity}</span></div>
+            `).join('');
+            const totalPrice = o.total_price != null ? o.total_price : items.reduce((s, it) => s + (it.subtotal||0), 0);
+            return `
             <div class="order-card">
                 <div class="head">
-                    <span class="oid">${o.order_id}</span>
+                    <span class="oid">${o.order_id || o.order_no}</span>
                     <span class="status ${o.status}">${statusMap[o.status]||o.status}</span>
                 </div>
-                <div class="dish-row"><span>${o.dish_name}</span><span class="qty">×${o.quantity}</span></div>
+                ${itemsHtml}
                 ${o.remark ? `<div style="font-size:12px;color:var(--fg-muted);margin-top:4px">备注: ${o.remark}</div>` : ''}
                 <div class="foot">
                     <span>${o.order_time ? o.order_time.substring(5,16) : ''}</span>
-                    ${o.total_price ? `<span class="price">¥${o.total_price.toFixed(2)}</span>` : ''}
+                    ${totalPrice ? `<span class="price">¥${Number(totalPrice).toFixed(2)}</span>` : ''}
                 </div>
                 ${o.status === 'pending' ? `<div class="foot"><span>取餐截止: ${o.take_deadline ? o.take_deadline.substring(5,16) : ''}</span><span class="pickup">${o.pickup_code}</span></div>` : ''}
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // ===== 历史 =====
