@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>食堂预订</title>
     <style>
+        /* 全局变量 - 颜色/间距/阴影 */
         :root {
             --bg: #ffffff;
             --bg-soft: #eef2f7;
@@ -22,6 +23,7 @@
             --shadow: 0 2px 8px rgba(0,0,0,0.06);
             --radius: 12px;
         }
+        /* 深色模式变量覆盖 */
         [data-theme="dark"] {
             --bg: #1a1b2e;
             --bg-soft: #12132a;
@@ -312,12 +314,12 @@
     const API = '';
     let currentUser = null;
     let menuData = [];
-    let cart = {};  // {dish_name: quantity}
+    let cart = {};
     let currentCategory = '全部';
 
     function $(id) { return document.getElementById(id); }
 
-    // 主题切换
+    // ===== 主题切换 =====
     function toggleTheme() {
         const html = document.documentElement;
         const isDark = html.getAttribute('data-theme') === 'dark';
@@ -346,7 +348,7 @@
         setTimeout(() => el.innerHTML = '', 3000);
     }
 
-    // ===== 登录 =====
+    // ===== 用户登录 =====
     async function doLogin() {
         const name = $('login-name').value.trim();
         const empid = $('login-empid').value.trim();
@@ -385,7 +387,7 @@
         $('login-empid').value = '';
     }
 
-    // ===== 分类 =====
+    // ===== 分类管理 =====
     async function loadCategories() {
         try {
             const r = await fetch(`${API}/api/categories`);
@@ -408,7 +410,7 @@
         renderMenu();
     }
 
-    // ===== 菜单 =====
+    // ===== 菜单管理 =====
     async function loadMenu() {
         try {
             const r = await fetch(`${API}/api/menu`);
@@ -485,7 +487,7 @@
         }
     }
 
-    // ===== 下单 =====
+    // ===== 订单提交 =====
     async function submitCart() {
         const items = Object.entries(cart).map(([name, qty]) => ({dish_name: name, quantity: qty}));
         if (items.length === 0) return;
@@ -526,7 +528,7 @@
         switchTab('orders');
     }
 
-    // ===== 订单 =====
+    // ===== 当前订单 =====
     async function loadOrders() {
         try {
             const r = await fetch(`${API}/api/user_orders?user_id=${currentUser.user_id}`);
@@ -564,7 +566,7 @@
         }).join('');
     }
 
-    // ===== 历史 =====
+    // ===== 历史订单 =====
     async function loadHistory() {
         const start = $('hist-start').value;
         const end = $('hist-end').value;
@@ -578,7 +580,7 @@
         } catch (e) {}
     }
 
-    // ===== 健康 =====
+    // ===== 健康建议 =====
     async function loadHealth() {
         try {
             const r = await fetch(`${API}/api/dietary_suggestion?user_id=${currentUser.user_id}`);
@@ -619,7 +621,7 @@
         $('cart-bar').style.display = tab === 'menu' ? '' : 'none';
     }
 
-    // ===== 启动 =====
+    // ===== 页面启动 =====
     window.addEventListener('DOMContentLoaded', () => {
         initTheme();
         const saved = localStorage.getItem('canteen_user');

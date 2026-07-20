@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>食堂管理后台</title>
     <style>
+        /* 全局变量 - 颜色/间距/阴影 */
         :root {
             --bg: #ffffff;
             --bg-soft: #eef2f7;
@@ -24,6 +25,7 @@
             --radius: 12px;
             --sidebar-w: 220px;
         }
+        /* 深色模式变量覆盖 */
         [data-theme="dark"] {
             --bg: #1a1b2e;
             --bg-soft: #12132a;
@@ -42,15 +44,9 @@
             --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
         }
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: var(--bg-soft);
-            color: var(--fg);
-            font-size: 14px;
-            line-height: 1.5;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg-soft); color: var(--fg); font-size: 14px; line-height: 1.5; }
 
-        /* 绑定页 */
+        /* 绑定页样式 */
         .bind-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--bg); }
         .bind-card { background: var(--bg-card); border-radius: 16px; padding: 32px; width: 100%; max-width: 380px; box-shadow: var(--shadow-lg); }
         .bind-logo { text-align: center; margin-bottom: 28px; }
@@ -95,7 +91,7 @@
         .sidebar .admin-info .logout { font-size: 11px; opacity: 0.7; cursor: pointer; margin-top: 4px; }
         .sidebar .admin-info .logout:hover { opacity: 1; }
 
-        /* 主内容 */
+        /* 主内容区 */
         .main-content { margin-left: var(--sidebar-w); min-height: 100vh; }
         .topbar { background: var(--bg); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
         .topbar h1 { font-size: 18px; }
@@ -111,12 +107,12 @@
         .stat-card .hint { font-size: 11px; color: var(--fg-muted); margin-top: 8px; }
         .stat-card .ico { font-size: 20px; opacity: 0.3; float: right; }
 
-        /* 卡片 */
+        /* 通用卡片 */
         .card { background: var(--bg-card); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
         .card-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .card-title a { font-size: 12px; color: var(--fg-soft); text-decoration: none; font-weight: normal; }
 
-        /* 表格 */
+        /* 表格样式 */
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th { text-align: left; padding: 10px 12px; background: var(--bg-soft); font-weight: 600; color: var(--fg-soft); font-size: 12px; }
         td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
@@ -137,21 +133,11 @@
         [data-theme="dark"] .sidebar-nav a { color: rgba(255,255,255,0.7); }
         [data-theme="dark"] .sidebar-nav a:hover, [data-theme="dark"] .sidebar-nav a.active { color: #fff; }
 
-        .theme-toggle {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            color: var(--fg);
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            transition: all 0.3s;
-            flex-shrink: 0;
-        }
+        /* 主题切换按钮 */
+        .theme-toggle { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-card); color: var(--fg); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.3s; flex-shrink: 0; }
         .theme-toggle:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
 
-        /* 菜品列表 */
+        /* 菜品列表项 */
         .dish-item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
         .dish-item:last-child { border-bottom: none; }
         .dish-item .emoji { width: 48px; height: 48px; border-radius: 10px; background: var(--bg-soft); display: flex; align-items: center; justify-content: center; font-size: 24px; }
@@ -172,7 +158,7 @@
         .stock-bar-item .fill.low { background: var(--danger); }
         .stock-bar-item .fill.mid { background: var(--warning); }
 
-        /* 表单 */
+        /* 表单布局 */
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
 
@@ -188,7 +174,7 @@
         .loading { text-align: center; padding: 30px; color: var(--fg-muted); font-size: 13px; }
         .overview-grid, .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 
-        /* 响应式 */
+        /* 响应式布局 */
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
@@ -221,31 +207,19 @@
             <p>首次使用请绑定管理员信息</p>
         </div>
         <div id="bind-msg"></div>
-        <div class="form-group">
-            <label>管理员账号</label>
-            <input type="text" value="admin" readonly>
-        </div>
-        <div class="form-group">
-            <label>姓名</label>
-            <input type="text" id="bind-name" placeholder="请输入管理员姓名">
-        </div>
-        <div class="form-group">
-            <label>工号</label>
-            <input type="text" id="bind-empid" placeholder="请输入工号">
-        </div>
+        <div class="form-group"><label>管理员账号</label><input type="text" value="admin" readonly></div>
+        <div class="form-group"><label>姓名</label><input type="text" id="bind-name" placeholder="请输入管理员姓名"></div>
+        <div class="form-group"><label>工号</label><input type="text" id="bind-empid" placeholder="请输入工号"></div>
         <button class="btn btn-block" onclick="doBind()">绑定并进入</button>
     </div>
 </div>
 
 <!-- 主布局 -->
 <div id="layout" class="layout">
-    <!-- 侧边栏 -->
+    <!-- 侧边栏导航 -->
     <aside class="sidebar" id="sidebar">
         <div class="brand">
-            <div class="logo">
-                <div class="icon">🍽️</div>
-                <div><h2>食堂管理</h2><p>Canteen Admin</p></div>
-            </div>
+            <div class="logo"><div class="icon">🍽️</div><div><h2>食堂管理</h2><p>Canteen Admin</p></div></div>
         </div>
         <ul class="sidebar-nav">
             <li><a href="#" onclick="showTab('dashboard');return false;" class="active"><span class="ico">▣</span> 数据概览</a></li>
@@ -261,82 +235,39 @@
         </div>
     </aside>
 
-    <!-- 主内容 -->
+    <!-- 主内容区 -->
     <div class="main-content">
         <div class="topbar">
-            <div style="display:flex;align-items:center;gap:12px">
-                <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
-                <h1 id="page-title">数据概览</h1>
-            </div>
+            <div style="display:flex;align-items:center;gap:12px"><span class="menu-toggle" onclick="toggleSidebar()">☰</span><h1 id="page-title">数据概览</h1></div>
             <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="切换主题">☀</button>
         </div>
         <div class="content">
-            <!-- 数据概览 -->
+            <!-- 数据概览页 -->
             <div id="tab-dashboard">
                 <div class="stats-grid">
-                    <div class="stat-card" onclick="showOrdersByStatus('')">
-                        <span class="ico">📋</span>
-                        <div class="num" id="stat-total">0</div>
-                        <div class="label">今日订单</div>
-                        <div class="hint">点击查看全部</div>
-                    </div>
-                    <div class="stat-card" onclick="showOrdersByStatus('pending')">
-                        <span class="ico">⏰</span>
-                        <div class="num" id="stat-pending">0</div>
-                        <div class="label">待取餐</div>
-                        <div class="hint">点击查看详情</div>
-                    </div>
-                    <div class="stat-card" onclick="showOrdersByStatus('taken')">
-                        <span class="ico">✅</span>
-                        <div class="num" id="stat-taken">0</div>
-                        <div class="label">已取餐</div>
-                        <div class="hint">点击查看详情</div>
-                    </div>
-                    <div class="stat-card">
-                        <span class="ico">💰</span>
-                        <div class="num" id="stat-revenue">¥0</div>
-                        <div class="label">今日营业额</div>
-                        <div class="hint">待取+已取</div>
-                    </div>
+                    <div class="stat-card" onclick="showOrdersByStatus('')"><span class="ico">📋</span><div class="num" id="stat-total">0</div><div class="label">今日订单</div><div class="hint">点击查看全部</div></div>
+                    <div class="stat-card" onclick="showOrdersByStatus('pending')"><span class="ico">⏰</span><div class="num" id="stat-pending">0</div><div class="label">待取餐</div><div class="hint">点击查看详情</div></div>
+                    <div class="stat-card" onclick="showOrdersByStatus('taken')"><span class="ico">✅</span><div class="num" id="stat-taken">0</div><div class="label">已取餐</div><div class="hint">点击查看详情</div></div>
+                    <div class="stat-card"><span class="ico">💰</span><div class="num" id="stat-revenue">¥0</div><div class="label">今日营业额</div><div class="hint">待取+已取</div></div>
                 </div>
-
                 <div class="overview-grid" id="overview-row">
-                    <div class="card">
-                        <div class="card-title"><span>📋 最近订单</span><a href="#" onclick="showTab('order');return false;">全部 →</a></div>
-                        <div id="recent-orders"><div class="loading">加载中...</div></div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title"><span>🍲 库存概览</span><a href="#" onclick="showTab('dish');return false;">管理 →</a></div>
-                        <div id="stock-overview"><div class="loading">加载中...</div></div>
-                    </div>
+                    <div class="card"><div class="card-title"><span>📋 最近订单</span><a href="#" onclick="showTab('order');return false;">全部 →</a></div><div id="recent-orders"><div class="loading">加载中...</div></div></div>
+                    <div class="card"><div class="card-title"><span>🍲 库存概览</span><a href="#" onclick="showTab('dish');return false;">管理 →</a></div><div id="stock-overview"><div class="loading">加载中...</div></div></div>
                 </div>
-
                 <div class="bottom-grid">
-                    <div class="card">
-                        <div class="card-title">🔥 热销 TOP5</div>
-                        <table class="mobile-table"><thead><tr><th>菜品</th><th>销量</th></tr></thead><tbody id="top-dishes"></tbody></table>
-                        <div class="mobile-card-list" id="top-dishes-mobile" style="display:none;"></div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">⚠️ 低库存预警</div>
-                        <table class="mobile-table"><thead><tr><th>菜品</th><th>剩余</th></tr></thead><tbody id="low-stock"></tbody></table>
-                        <div class="mobile-card-list" id="low-stock-mobile" style="display:none;"></div>
-                    </div>
+                    <div class="card"><div class="card-title">🔥 热销 TOP5</div><table class="mobile-table"><thead><tr><th>菜品</th><th>销量</th></tr></thead><tbody id="top-dishes"></tbody></table><div class="mobile-card-list" id="top-dishes-mobile" style="display:none;"></div></div>
+                    <div class="card"><div class="card-title">⚠️ 低库存预警</div><table class="mobile-table"><thead><tr><th>菜品</th><th>剩余</th></tr></thead><tbody id="low-stock"></tbody></table><div class="mobile-card-list" id="low-stock-mobile" style="display:none;"></div></div>
                 </div>
             </div>
 
-            <!-- 菜品管理 -->
+            <!-- 菜品管理页 -->
             <div id="tab-dish" class="hidden">
                 <div class="card">
                     <div class="card-title">上架新菜品</div>
                     <div id="dish-msg"></div>
                     <div class="form-row">
                         <div class="form-group"><label>菜品名称</label><input type="text" id="dish-name" placeholder="如：红烧肉"></div>
-                        <div class="form-group"><label>分类</label>
-                            <select id="dish-category">
-                                <option>热菜</option><option>素菜</option><option>主食</option><option>汤</option><option>其他</option>
-                            </select>
-                        </div>
+                        <div class="form-group"><label>分类</label><select id="dish-category"><option>热菜</option><option>素菜</option><option>主食</option><option>汤</option><option>其他</option></select></div>
                     </div>
                     <div class="form-row-3">
                         <div class="form-group"><label>价格(元)</label><input type="number" id="dish-price" placeholder="0" step="0.5"></div>
@@ -350,13 +281,10 @@
                     <div class="form-group"><label>描述</label><input type="text" id="dish-desc" placeholder="菜品简介"></div>
                     <button class="btn" onclick="addDish()">上架菜品</button>
                 </div>
-                <div class="card">
-                    <div class="card-title">菜品列表</div>
-                    <div id="dish-list"><div class="loading">加载中...</div></div>
-                </div>
+                <div class="card"><div class="card-title">菜品列表</div><div id="dish-list"><div class="loading">加载中...</div></div></div>
             </div>
 
-            <!-- 订单管理 -->
+            <!-- 订单管理页 -->
             <div id="tab-order" class="hidden">
                 <div class="card">
                     <div class="card-title">订单操作</div>
@@ -371,17 +299,13 @@
                     </div>
                     <div id="order-msg" style="margin-top:12px"></div>
                 </div>
-                <div class="card">
-                    <div class="card-title">今日订单列表</div>
-                    <div style="overflow-x:auto"><table class="mobile-table">
-                        <thead><tr><th>订单号</th><th>下单人</th><th>菜品明细</th><th>金额</th><th>时间</th><th>状态</th><th>操作</th></tr></thead>
-                        <tbody id="order-tbody"><tr><td colspan="7" class="loading">加载中...</td></tr></tbody>
-                    </table></div>
+                <div class="card"><div class="card-title">今日订单列表</div>
+                    <div style="overflow-x:auto"><table class="mobile-table"><thead><tr><th>订单号</th><th>下单人</th><th>菜品明细</th><th>金额</th><th>时间</th><th>状态</th><th>操作</th></tr></thead><tbody id="order-tbody"><tr><td colspan="7" class="loading">加载中...</td></tr></tbody></table></div>
                     <div class="mobile-card-list" id="order-card-list" style="display:none;"></div>
                 </div>
             </div>
 
-            <!-- 系统配置 -->
+            <!-- 系统配置页 -->
             <div id="tab-config" class="hidden">
                 <div class="card">
                     <div class="card-title">时间配置</div>
@@ -398,14 +322,10 @@
                 </div>
             </div>
 
-            <!-- 操作日志 -->
+            <!-- 操作日志页 -->
             <div id="tab-logs" class="hidden">
-                <div class="card">
-                    <div class="card-title">操作日志（最近20条）</div>
-                    <div style="overflow-x:auto"><table>
-                        <thead><tr><th>时间</th><th>操作人</th><th>操作</th><th>详情</th></tr></thead>
-                        <tbody id="logs-tbody"><tr><td colspan="4" class="loading">加载中...</td></tr></tbody>
-                    </table></div>
+                <div class="card"><div class="card-title">操作日志（最近20条）</div>
+                    <div style="overflow-x:auto"><table><thead><tr><th>时间</th><th>操作人</th><th>操作</th><th>详情</th></tr></thead><tbody id="logs-tbody"><tr><td colspan="4" class="loading">加载中...</td></tr></tbody></table></div>
                 </div>
             </div>
         </div>
@@ -413,25 +333,10 @@
 </div>
 
 <!-- 订单详情模态框 -->
-<div class="modal-overlay" id="orders-modal">
-    <div class="modal large">
-        <span class="close" onclick="closeModal('orders-modal')">×</span>
-        <h3 id="orders-modal-title">订单列表</h3>
-        <div id="orders-modal-body"></div>
-    </div>
-</div>
+<div class="modal-overlay" id="orders-modal"><div class="modal large"><span class="close" onclick="closeModal('orders-modal')">×</span><h3 id="orders-modal-title">订单列表</h3><div id="orders-modal-body"></div></div></div>
 
 <!-- 编辑菜品模态框 -->
-<div class="modal-overlay" id="edit-modal">
-    <div class="modal">
-        <span class="close" onclick="closeModal('edit-modal')">×</span>
-        <h3>编辑菜品</h3>
-        <input type="hidden" id="edit-name">
-        <div class="form-group"><label>当前库存</label><input type="number" id="edit-stock"></div>
-        <div class="form-group"><label>每人限购</label><input type="number" id="edit-limit"></div>
-        <button class="btn btn-block" onclick="updateDish()">保存修改</button>
-    </div>
-</div>
+<div class="modal-overlay" id="edit-modal"><div class="modal"><span class="close" onclick="closeModal('edit-modal')">×</span><h3>编辑菜品</h3><input type="hidden" id="edit-name"><div class="form-group"><label>当前库存</label><input type="number" id="edit-stock"></div><div class="form-group"><label>每人限购</label><input type="number" id="edit-limit"></div><button class="btn btn-block" onclick="updateDish()">保存修改</button></div></div>
 
 <script>
     const API = '';
@@ -439,7 +344,7 @@
 
     function $(id) { return document.getElementById(id); }
 
-    // 主题切换
+    // ===== 主题切换 =====
     function toggleTheme() {
         const html = document.documentElement;
         const isDark = html.getAttribute('data-theme') === 'dark';
@@ -457,16 +362,11 @@
     }
     function initTheme() {
         const saved = localStorage.getItem('canteen_theme');
-        if (saved) {
-            document.documentElement.setAttribute('data-theme', saved);
-        }
+        if (saved) document.documentElement.setAttribute('data-theme', saved);
         updateThemeIcon();
     }
 
-    function showMsg(el, msg, type) {
-        el.innerHTML = `<div class="msg ${type}">${msg}</div>`;
-        setTimeout(() => el.innerHTML = '', 3000);
-    }
+    function showMsg(el, msg, type) { el.innerHTML = `<div class="msg ${type}">${msg}</div>`; setTimeout(() => el.innerHTML = '', 3000); }
     function openModal(id) { $(id).classList.add('active'); }
     function closeModal(id) { $(id).classList.remove('active'); }
     function toggleSidebar() { $('sidebar').classList.toggle('open'); }
@@ -476,23 +376,18 @@
         try {
             const r = await fetch(`${API}/api/admin/info?admin_id=${ADMIN_ID}`);
             const d = await r.json();
-            if (d.success && d.data.need_bind) {
-                $('bind-page').style.display = 'flex';
-                $('layout').classList.remove('active');
-            } else if (d.success) {
+            if (d.success && d.data.need_bind) { $('bind-page').style.display = 'flex'; $('layout').classList.remove('active'); }
+            else if (d.success) {
                 $('sidebar-name').textContent = d.data.name || '管理员';
                 $('sidebar-empid').textContent = '工号: ' + (d.data.employee_id || '-');
                 $('bind-page').style.display = 'none';
                 $('layout').classList.add('active');
                 loadStats();
-            } else {
-                $('bind-page').style.display = 'flex';
-            }
-        } catch (e) {
-            $('bind-page').style.display = 'flex';
-        }
+            } else { $('bind-page').style.display = 'flex'; }
+        } catch (e) { $('bind-page').style.display = 'flex'; }
     }
 
+    // ===== 管理员绑定 =====
     async function doBind() {
         const name = $('bind-name').value.trim();
         const empid = $('bind-empid').value.trim();
@@ -508,28 +403,20 @@
         } catch (e) { showMsg($('bind-msg'), '网络错误', 'error'); }
     }
 
-    function adminLogout() {
-        if (confirm('确定退出？')) location.reload();
-    }
+    function adminLogout() { if (confirm('确定退出？')) location.reload(); }
 
     // ===== Tab 切换 =====
     function showTab(tab) {
         document.querySelectorAll('.sidebar-nav li a').forEach(a => a.classList.remove('active'));
         const titles = {dashboard:'数据概览', dish:'菜品管理', order:'订单管理', config:'系统配置', logs:'操作日志'};
         $('page-title').textContent = titles[tab];
-        ['dashboard','dish','order','config','logs'].forEach(t => {
-            $('tab-'+t).classList.toggle('hidden', t !== tab);
-        });
-        // 高亮当前
+        ['dashboard','dish','order','config','logs'].forEach(t => $('tab-'+t).classList.toggle('hidden', t !== tab));
         const links = document.querySelectorAll('.sidebar-nav li a');
-        links.forEach(a => {
-            if (a.getAttribute('onclick').includes(`'${tab}'`)) a.classList.add('active');
-        });
+        links.forEach(a => { if (a.getAttribute('onclick').includes(`'${tab}'`)) a.classList.add('active'); });
         if (tab === 'dashboard') loadStats();
         if (tab === 'dish') loadDishes();
         if (tab === 'order') loadOrders();
         if (tab === 'logs') loadLogs();
-        // 移动端关闭侧边栏
         $('sidebar').classList.remove('open');
     }
 
@@ -543,11 +430,9 @@
                 $('stat-pending').textContent = d.data.pending_orders;
                 $('stat-taken').textContent = d.data.taken_orders;
                 $('stat-revenue').textContent = '¥' + (d.data.today_revenue || 0).toFixed(2);
-
                 const top = $('top-dishes');
                 top.innerHTML = d.data.top_dishes.length ? d.data.top_dishes.map(x=>`<tr><td>${x.name}</td><td>${x.quantity}</td></tr>`).join('') : '<tr><td colspan="2" class="loading">暂无数据</td></tr>';
                 $('top-dishes-mobile').innerHTML = d.data.top_dishes.length ? d.data.top_dishes.map(x=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>${x.name}</span><span style="font-weight:600">${x.quantity}份</span></div>`).join('') : '<div class="loading" style="padding:16px">暂无数据</div>';
-
                 const low = $('low-stock');
                 low.innerHTML = d.data.low_stock.length ? d.data.low_stock.map(x=>`<tr><td>${x.name}</td><td style="color:var(--danger);font-weight:600">${x.remaining}</td></tr>`).join('') : '<tr><td colspan="2" class="loading">暂无</td></tr>';
                 $('low-stock-mobile').innerHTML = d.data.low_stock.length ? d.data.low_stock.map(x=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>${x.name}</span><span style="font-weight:600;color:var(--danger)">${x.remaining}份</span></div>`).join('') : '<div class="loading" style="padding:16px">暂无</div>';
@@ -634,10 +519,7 @@
             });
             const d = await r.json();
             showMsg($('dish-msg'), d.message, d.success?'success':'error');
-            if (d.success) {
-                ['dish-name','dish-price','dish-stock','dish-allergy','dish-desc'].forEach(id=>$(id).value='');
-                loadDishes();
-            }
+            if (d.success) { ['dish-name','dish-price','dish-stock','dish-allergy','dish-desc'].forEach(id=>$(id).value=''); loadDishes(); }
         } catch (e) { showMsg($('dish-msg'), '网络错误', 'error'); }
     }
 
@@ -670,12 +552,7 @@
         } catch (e) {}
     }
 
-    function openEdit(name, stock, limit) {
-        $('edit-name').value = name;
-        $('edit-stock').value = stock;
-        $('edit-limit').value = limit;
-        openModal('edit-modal');
-    }
+    function openEdit(name, stock, limit) { $('edit-name').value = name; $('edit-stock').value = stock; $('edit-limit').value = limit; openModal('edit-modal'); }
 
     async function updateDish() {
         const name = $('edit-name').value;
@@ -715,40 +592,16 @@
                 const statusMap = {pending:'待取餐', taken:'已取餐', cancelled:'已取消', overtime:'超时'};
                 const tbody = $('order-tbody');
                 const cardList = $('order-card-list');
-                if (d.data.length === 0) { 
-                    tbody.innerHTML = '<tr><td colspan="7" class="loading">今日暂无订单</td></tr>'; 
-                    cardList.innerHTML = '<div class="loading" style="padding:16px">今日暂无订单</div>';
-                    return; 
-                }
+                if (d.data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="loading">今日暂无订单</td></tr>'; cardList.innerHTML = '<div class="loading" style="padding:16px">今日暂无订单</div>'; return; }
                 tbody.innerHTML = d.data.map(o=>{
                     const items = o.items || [{dish_name: o.dish_name, quantity: o.quantity}];
                     const dishText = items.map(it=>`${it.dish_name}×${it.quantity}`).join('<br>');
-                    return `<tr>
-                    <td style="font-weight:600">${o.order_no}</td>
-                    <td>${o.user_name}<br><span style="font-size:11px;color:var(--fg-muted)">${o.employee_id}</span></td>
-                    <td>${dishText}</td>
-                    <td>¥${(o.total_price||0).toFixed(2)}</td>
-                    <td style="font-size:12px">${o.order_time?o.order_time.substring(11,16):''}</td>
-                    <td><span class="status-badge ${o.status}">${statusMap[o.status]}</span></td>
-                    <td>${o.status==='pending'?`<button class="btn btn-sm btn-success" onclick="verifyById('${o.order_no}')">核销</button> <button class="btn btn-sm btn-danger" onclick="cancelById('${o.order_no}')">取消</button>`:''}</td>
-                </tr>`;
+                    return `<tr><td style="font-weight:600">${o.order_no}</td><td>${o.user_name}<br><span style="font-size:11px;color:var(--fg-muted)">${o.employee_id}</span></td><td>${dishText}</td><td>¥${(o.total_price||0).toFixed(2)}</td><td style="font-size:12px">${o.order_time?o.order_time.substring(11,16):''}</td><td><span class="status-badge ${o.status}">${statusMap[o.status]}</span></td><td>${o.status==='pending'?`<button class="btn btn-sm btn-success" onclick="verifyById('${o.order_no}')">核销</button> <button class="btn btn-sm btn-danger" onclick="cancelById('${o.order_no}')">取消</button>`:''}</td></tr>`;
                 }).join('');
                 cardList.innerHTML = d.data.map(o=>{
                     const items = o.items || [{dish_name: o.dish_name, quantity: o.quantity}];
                     const itemsHtml = items.map(it=>`<div style="padding:4px 0;font-size:13px"><span>${it.dish_name}</span><span style="float:right">×${it.quantity}</span></div>`).join('');
-                    return `<div style="background:var(--bg-card);border-radius:var(--radius);padding:12px;margin-bottom:8px;box-shadow:var(--shadow)">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                            <span style="font-weight:600;font-size:14px">${o.order_no}</span>
-                            <span class="status-badge ${o.status}">${statusMap[o.status]}</span>
-                        </div>
-                        <div style="font-size:13px;color:var(--fg-soft);margin-bottom:6px">${o.user_name} · ${o.employee_id}</div>
-                        ${itemsHtml}
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-                            <span style="font-size:12px">${o.order_time?o.order_time.substring(11,16):''}</span>
-                            <span style="font-weight:600;color:var(--danger)">¥${(o.total_price||0).toFixed(2)}</span>
-                        </div>
-                        ${o.status==='pending'?`<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-sm btn-success" onclick="verifyById('${o.order_no}')">核销</button><button class="btn btn-sm btn-danger" onclick="cancelById('${o.order_no}')">取消</button></div>`:''}
-                    </div>`;
+                    return `<div style="background:var(--bg-card);border-radius:var(--radius);padding:12px;margin-bottom:8px;box-shadow:var(--shadow)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:600;font-size:14px">${o.order_no}</span><span class="status-badge ${o.status}">${statusMap[o.status]}</span></div><div style="font-size:13px;color:var(--fg-soft);margin-bottom:6px">${o.user_name} · ${o.employee_id}</div>${itemsHtml}<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span style="font-size:12px">${o.order_time?o.order_time.substring(11,16):''}</span><span style="font-weight:600;color:var(--danger)">¥${(o.total_price||0).toFixed(2)}</span></div>${o.status==='pending'?`<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-sm btn-success" onclick="verifyById('${o.order_no}')">核销</button><button class="btn btn-sm btn-danger" onclick="cancelById('${o.order_no}')">取消</button></div>`:''}</div>`;
                 }).join('');
             }
         } catch (e) {}
@@ -783,7 +636,7 @@
         loadOrders();
     }
 
-    // ===== 配置 =====
+    // ===== 系统配置 =====
     async function updateCutoff() {
         const t = $('cutoff-time').value;
         const r = await fetch(`${API}/api/admin/update_cutoff`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({admin_id:ADMIN_ID,cutoff_time:t})});
@@ -799,7 +652,7 @@
         showMsg($('config-msg'), d.message, d.success?'success':'error');
     }
 
-    // ===== 日志 =====
+    // ===== 操作日志 =====
     async function loadLogs() {
         try {
             const r = await fetch(`${API}/api/admin/logs?admin_id=${ADMIN_ID}`);
