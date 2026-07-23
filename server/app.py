@@ -4,7 +4,7 @@
 提供用户端和管理端的 REST API 接口
 """
 
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, Blueprint
 from flask_cors import CORS
 import sqlite3
 import os
@@ -306,7 +306,7 @@ def place_order():
     cursor.execute('''
         SELECT COALESCE(SUM(quantity), 0) as total
         FROM orders
-        WHERE user_id = ? AND dish_name = ? AND status = 'pending' AND DATE(order_time) = DATE('now')
+        WHERE user_id = ? AND dish_name = ? AND status = 'pending' AND DATE(order_time) = DATE('now','localtime')
     ''', (user_id, dish_name))
     today_ordered = cursor.fetchone()['total']
 
@@ -327,7 +327,7 @@ def place_order():
             raise Exception('库存被抢光')
 
         # 生成订单号（同一批次下单共用一个订单号）
-        cursor.execute('SELECT COUNT(DISTINCT order_no) as count FROM orders WHERE DATE(order_time) = DATE("now")')
+        cursor.execute('SELECT COUNT(DISTINCT order_no) as count FROM orders WHERE DATE(order_time) = DATE("now","localtime")')
         order_count = cursor.fetchone()['count']
         order_no = f"D{datetime.now().strftime('%Y%m%d')}{str(order_count + 1).zfill(4)}"
 
@@ -341,7 +341,7 @@ def place_order():
         # 插入订单记录
         cursor.execute('''
             INSERT INTO orders (order_no, user_id, dish_name, quantity, order_time, take_deadline, status, pickup_code, unit_price, total_price)
-            VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?, ?, ?)
+            VALUES (?, ?, ?, ?, datetime('now','localtime'), ?, 'pending', ?, ?, ?)
         ''', (order_no, user_id, dish_name, quantity, take_deadline, pickup_code, dish['price'], dish['price'] * quantity))
 
         conn.commit()
@@ -396,7 +396,7 @@ def order_batch():
         take_deadline = f"{datetime.now().strftime('%Y-%m-%d')} {take_end}"
 
         # 同一批次下单共用一个订单号
-        cursor.execute('SELECT COUNT(DISTINCT order_no) as count FROM orders WHERE DATE(order_time) = DATE("now")')
+        cursor.execute('SELECT COUNT(DISTINCT order_no) as count FROM orders WHERE DATE(order_time) = DATE("now","localtime")')
         order_count = cursor.fetchone()['count']
         order_no = f"D{datetime.now().strftime('%Y%m%d')}{str(order_count + 1).zfill(4)}"
         pickup_code = f"{user['employee_id'][-4:]}+{order_no[-3:]}"
@@ -418,7 +418,7 @@ def order_batch():
             # 限购检查
             cursor.execute('''
                 SELECT COALESCE(SUM(quantity), 0) as total FROM orders
-                WHERE user_id = ? AND dish_name = ? AND status = 'pending' AND DATE(order_time) = DATE('now')
+                WHERE user_id = ? AND dish_name = ? AND status = 'pending' AND DATE(order_time) = DATE('now','localtime')
             ''', (user_id, dish_name))
             today_ordered = cursor.fetchone()['total']
             if today_ordered + quantity > dish['limit_per_person']:
@@ -433,7 +433,7 @@ def order_batch():
             # 插入订单记录（共用同一个 order_no）
             cursor.execute('''
                 INSERT INTO orders (order_no, user_id, dish_name, quantity, order_time, take_deadline, status, pickup_code, remark, unit_price, total_price)
-                VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, datetime('now','localtime'), ?, 'pending', ?, ?, ?, ?)
             ''', (order_no, user_id, dish_name, quantity, take_deadline, pickup_code, remark, dish['price'], dish['price'] * quantity))
 
             total_price += dish['price'] * quantity
@@ -468,7 +468,7 @@ def get_user_orders():
         SELECT o.order_no, o.dish_name, o.quantity, o.order_time, o.take_deadline,
                o.status, o.pickup_code, o.total_price, o.remark, o.unit_price, u.name
         FROM orders o JOIN users u ON o.user_id = u.user_id
-        WHERE o.user_id = ? AND DATE(o.order_time) = DATE('now')
+        WHERE o.user_id = ? AND DATE(o.order_time) = DATE('now','localtime')
         ORDER BY o.order_time DESC
     ''', (user_id,))
 
@@ -576,7 +576,7 @@ def get_dietary_suggestion():
     cursor.execute('''
         SELECT d.nutrition_info, d.allergy_tag, SUM(o.quantity) as total_qty
         FROM orders o JOIN dishes d ON o.dish_name = d.name
-        WHERE o.user_id = ? AND DATE(o.order_time) = DATE('now')
+        WHERE o.user_id = ? AND DATE(o.order_time) = DATE('now','localtime')
         GROUP BY o.dish_name
     ''', (user_id,))
 
@@ -861,7 +861,7 @@ def update_cutoff():
 
     old_value = get_config('order_cutoff_time')
     cursor.execute(
-        'UPDATE system_config SET value = ?, updated_at = datetime("now") WHERE config_key = "order_cutoff_time"',
+        'UPDATE system_config SET value = ?, updated_at = datetime("now","localtime") WHERE config_key = "order_cutoff_time"',
         (cutoff_time,)
     )
     conn.commit()
@@ -895,11 +895,11 @@ def update_take_time():
     old_end = get_config('take_end')
 
     cursor.execute(
-        'UPDATE system_config SET value = ?, updated_at = datetime("now") WHERE config_key = "take_start"',
+        'UPDATE system_config SET value = ?, updated_at = datetime("now","localtime") WHERE config_key = "take_start"',
         (take_start,)
     )
     cursor.execute(
-        'UPDATE system_config SET value = ?, updated_at = datetime("now") WHERE config_key = "take_end"',
+        'UPDATE system_config SET value = ?, updated_at = datetime("now","localtime") WHERE config_key = "take_end"',
         (take_end,)
     )
     conn.commit()
@@ -980,26 +980,26 @@ def get_stats():
         return jsonify({'success': False, 'message': '无权限执行此操作'}), 403
 
     # 今日订单总数（按 order_no 去重统计）
-    cursor.execute('SELECT COUNT(DISTINCT order_no) as total FROM orders WHERE DATE(order_time) = DATE("now")')
+    cursor.execute('SELECT COUNT(DISTINCT order_no) as total FROM orders WHERE DATE(order_time) = DATE("now","localtime")')
     total_orders = cursor.fetchone()['total']
 
     # 待取餐订单数（按 order_no 去重统计）
-    cursor.execute('SELECT COUNT(DISTINCT order_no) as cnt FROM orders WHERE DATE(order_time) = DATE("now") AND status = "pending"')
+    cursor.execute('SELECT COUNT(DISTINCT order_no) as cnt FROM orders WHERE DATE(order_time) = DATE("now","localtime") AND status = "pending"')
     pending_orders = cursor.fetchone()['cnt']
 
     # 已取餐订单数（按 order_no 去重统计）
-    cursor.execute('SELECT COUNT(DISTINCT order_no) as cnt FROM orders WHERE DATE(order_time) = DATE("now") AND status = "taken"')
+    cursor.execute('SELECT COUNT(DISTINCT order_no) as cnt FROM orders WHERE DATE(order_time) = DATE("now","localtime") AND status = "taken"')
     taken_orders = cursor.fetchone()['cnt']
 
     # 今日营业额（已取餐 + 待取餐，不含取消和超时）
-    cursor.execute('SELECT COALESCE(SUM(total_price), 0) as revenue FROM orders WHERE DATE(order_time) = DATE("now") AND status IN ("pending", "taken")')
+    cursor.execute('SELECT COALESCE(SUM(total_price), 0) as revenue FROM orders WHERE DATE(order_time) = DATE("now","localtime") AND status IN ("pending", "taken")')
     today_revenue = cursor.fetchone()['revenue']
 
     # 热销菜品TOP5
     cursor.execute('''
         SELECT o.dish_name, SUM(o.quantity) as total_qty
         FROM orders o
-        WHERE DATE(o.order_time) = DATE("now")
+        WHERE DATE(o.order_time) = DATE("now","localtime")
         GROUP BY o.dish_name
         ORDER BY total_qty DESC
         LIMIT 5
@@ -1049,7 +1049,7 @@ def get_all_orders():
                o.status, o.pickup_code, o.total_price, o.remark, o.unit_price,
                u.name as user_name, u.employee_id
         FROM orders o JOIN users u ON o.user_id = u.user_id
-        WHERE DATE(o.order_time) = DATE('now')
+        WHERE DATE(o.order_time) = DATE('now','localtime')
     '''
     params = []
 
@@ -1190,5 +1190,405 @@ def admin():
     return app.send_static_file('admin.html')
 
 
+# ============ v1 API Blueprint（领域扩展：病区/床位/医嘱/配送/营养） ============
+# 设计见 ARCHITECTURE.md §5。旧端点（/api/*）全部保留，v1 仅做能力扩展。
+# 时间一律走 SQLite 的 'now'（get_db 已设 PRAGMA timezone='localtime'），保证与 Python datetime.now() 本地时区一致。
+
+# 把 server/ 加入 path，便于 import services 包
+_sys.path.insert(0, os.path.join(PROJECT_ROOT, 'server'))
+try:
+    from services.diet_engine import (apply_rules_to_menu, load_rules,
+                                     summarize_constraints, get_diet_label, DIET_TYPES)
+    from services.nutrition import (harris_benedict, energy_target,
+                                   protein_target, nrs2002_screen)
+    from services.his_adapter import (fetch_patient_by_bed_token,
+                                     fetch_patient_by_id)
+    _HAS_SERVICES = True
+except Exception as _svc_e:
+    print(f'[WARN] 领域服务加载失败（v1 端点将不可用）: {_svc_e}')
+    _HAS_SERVICES = False
+
+v1 = Blueprint('v1', __name__, url_prefix='/api/v1')
+
+
+def _num(v):
+    """把请求参数安全转 float，失败返回 None"""
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+@v1.route('/bed/enter', methods=['POST'])
+def bed_enter():
+    """床头码进入：返回病区/床位/患者档案 + 按医嘱过滤后的可见菜单"""
+    data = request.get_json(silent=True) or {}
+    token = (data.get('bed_qr_token') or '').strip()
+    if not token:
+        return jsonify({'success': False, 'message': '请扫床头码或输入床位码'}), 400
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM wards WHERE bed_qr_token = ?', (token,))
+    ward = cursor.fetchone()
+    if not ward:
+        return jsonify({'success': False, 'message': f'床位码 {token} 未登记'}), 404
+
+    patient = None
+    diet_type = 'normal'
+    if _HAS_SERVICES:
+        his = fetch_patient_by_bed_token(token)
+        if his:
+            diet_type = his.get('diet_type', 'normal')
+            # 把 HIS 患者主索引同步到本地 patients 表（幂等）
+            try:
+                cursor.execute('''INSERT OR REPLACE INTO patients
+                    (id, name, ward_id, dept, diseases, allergies, diet_type, height_cm, weight_kg, age, sex)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                    (his['patient_id'], his['name'], ward['id'], his['dept'],
+                     json.dumps(his.get('diseases', []), ensure_ascii=False),
+                     json.dumps(his.get('allergies', []), ensure_ascii=False),
+                     diet_type, his.get('height_cm'), his.get('weight_kg'),
+                     his.get('age'), his.get('sex')))
+                conn.commit()
+            except Exception:
+                conn.rollback()
+            patient = {
+                'patient_id': his['patient_id'], 'name': his['name'], 'dept': his['dept'],
+                'diseases': his.get('diseases', []), 'allergies': his.get('allergies', []),
+                'diet_type': diet_type, 'height_cm': his.get('height_cm'),
+                'weight_kg': his.get('weight_kg'), 'age': his.get('age'), 'sex': his.get('sex'),
+            }
+
+    # 菜单 + 医嘱规则过滤
+    cursor.execute('SELECT * FROM dishes WHERE status = "上架" AND remaining > 0 ORDER BY category, name')
+    dishes = [dict(r) for r in cursor.fetchall()]
+    if _HAS_SERVICES and diet_type != 'normal':
+        dishes = apply_rules_to_menu(conn, diet_type, dishes)
+    else:
+        for d in dishes:
+            d['recommended'] = False
+            d['diet_locked'] = False
+
+    menu = []
+    for d in dishes:
+        nutri = {}
+        try:
+            nutri = json.loads(d.get('nutrition_info') or '{}')
+        except Exception:
+            pass
+        menu.append({
+            'name': d['name'], 'category': d['category'], 'price': d['price'],
+            'remaining': d['remaining'], 'limit_per_person': d['limit_per_person'],
+            'description': d.get('description'), 'image_emoji': d.get('image_emoji'),
+            'allergy_tag': d.get('allergy_tag'), 'nutrition_info': nutri,
+            'recommended': d.get('recommended', False),
+            'diet_locked': d.get('diet_locked', False),
+        })
+
+    return jsonify({
+        'success': True,
+        'ward': {'id': ward['id'], 'dept': ward['dept'], 'floor': ward['floor'], 'bed_no': ward['bed_no']},
+        'patient': patient,
+        'diet_type': diet_type,
+        'diet_type_label': get_diet_label(diet_type) if _HAS_SERVICES else diet_type,
+        'constraints': summarize_constraints(diet_type) if _HAS_SERVICES else '',
+        'menu': menu,
+    })
+
+
+@v1.route('/diet/rules', methods=['GET'])
+def diet_rules():
+    """医嘱规则引擎：某饮食类型下 允许/禁忌/推荐 菜品"""
+    if not _HAS_SERVICES:
+        return jsonify({'success': False, 'message': '领域服务未加载'}), 500
+    diet_type = request.args.get('diet_type', 'normal')
+    conn = get_db()
+    cursor = conn.cursor()
+    rules = load_rules(conn, diet_type)
+    return jsonify({
+        'success': True,
+        'diet_type': diet_type,
+        'diet_type_label': get_diet_label(diet_type),
+        'allow': sorted(rules['allow']),
+        'deny': sorted(rules['deny']),
+        'recommend': sorted(rules['recommend']),
+        'constraints': summarize_constraints(diet_type),
+    })
+
+
+@v1.route('/diet/charts', methods=['POST'])
+def diet_charts():
+    """营养科建膳食处方"""
+    data = request.get_json(silent=True) or {}
+    patient_id = data.get('patient_id')
+    if not patient_id:
+        return jsonify({'success': False, 'message': '缺少 patient_id'}), 400
+    meal_slot = data.get('meal_slot', '午餐')
+    items = data.get('items', [])
+    note = data.get('note', '')
+    effective_date = data.get('effective_date', '')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('''INSERT INTO diet_charts (patient_id, meal_slot, items, note, effective_date)
+                    VALUES (?, ?, ?, ?, ?)''',
+                   (patient_id, meal_slot, json.dumps(items, ensure_ascii=False), note, effective_date))
+    conn.commit()
+    return jsonify({'success': True, 'message': '膳食处方已保存', 'id': cursor.lastrowid})
+
+
+@v1.route('/orders', methods=['POST'])
+def create_order_v1():
+    """统一下单：支持 fulfillment_mode ∈ {pickup, bed_delivery}；床旁配送自动生成配送单"""
+    data = request.get_json(silent=True) or {}
+    user_id = data.get('user_id')
+    items = data.get('items', [])
+    fulfillment_mode = data.get('fulfillment_mode', 'pickup')
+    patient_id = data.get('patient_id')
+    ward_id = data.get('ward_id')
+    meal_slot = data.get('meal_slot', '午餐')
+    diet_chart_id = data.get('diet_chart_id')
+    remark = data.get('remark', '')
+    if not user_id or not items:
+        return jsonify({'success': False, 'message': '缺少 user_id 或菜品'}), 400
+    if fulfillment_mode not in ('pickup', 'bed_delivery'):
+        fulfillment_mode = 'pickup'
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
+    user = cursor.fetchone()
+    if not user or user['bind_status'] == 0:
+        return jsonify({'success': False, 'message': '您尚未登录'}), 401
+
+    cutoff_time = get_config('order_cutoff_time')
+    if datetime.now().strftime('%H:%M') > cutoff_time:
+        return jsonify({'success': False, 'message': f'⏰ 下单已截止（每日 {cutoff_time}），明日请早'}), 400
+
+    try:
+        conn.execute('BEGIN')
+        total_price = 0.0
+        take_end = get_config('take_end')
+        take_start = get_config('take_start')
+        take_deadline = f"{datetime.now().strftime('%Y-%m-%d')} {take_end}"
+        now_local = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        cursor.execute("SELECT COUNT(DISTINCT order_no) AS c FROM orders WHERE DATE(order_time) = DATE('now','localtime')")
+        order_count = cursor.fetchone()['c']
+        order_no = f"D{datetime.now().strftime('%Y%m%d')}{str(order_count + 1).zfill(4)}"
+        emp = ((user['employee_id'] or '')[-4:] or (patient_id or '0000')[-4:])
+        pickup_code = f"{emp}+{order_no[-3:]}"
+
+        for it in items:
+            name = it.get('dish_name')
+            qty = int(it.get('quantity', 1) or 1)
+            if qty <= 0:
+                continue
+            cursor.execute('SELECT * FROM dishes WHERE name = ? AND status = "上架"', (name,))
+            dish = cursor.fetchone()
+            if not dish:
+                raise Exception(f'"{name}" 今日未供应或已下架')
+            if dish['remaining'] < qty:
+                raise Exception(f'"{name}" 仅剩 {dish["remaining"]} 份，无法下单 {qty} 份')
+            cursor.execute('''SELECT COALESCE(SUM(quantity), 0) AS t FROM orders
+                            WHERE user_id = ? AND dish_name = ? AND status = 'pending' AND DATE(order_time) = DATE('now','localtime')''',
+                           (user_id, name))
+            if cursor.fetchone()['t'] + qty > dish['limit_per_person']:
+                raise Exception(f'"{name}" 每人限购 {dish["limit_per_person"]} 份')
+            cursor.execute('UPDATE dishes SET remaining = remaining - ? WHERE name = ? AND remaining >= ?', (qty, name, qty))
+            if cursor.rowcount == 0:
+                raise Exception(f'"{name}" 库存刚刚被抢光')
+            cursor.execute('''INSERT INTO orders
+                (order_no, user_id, dish_name, quantity, order_time, take_deadline, status, pickup_code,
+                 remark, unit_price, total_price, fulfillment_mode, patient_id, ward_id, meal_slot, diet_chart_id)
+                VALUES (?, ?, ?, ?, datetime('now','localtime'), ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                (order_no, user_id, name, qty, take_deadline, pickup_code, remark,
+                 dish['price'], dish['price'] * qty, fulfillment_mode, patient_id, ward_id, meal_slot, diet_chart_id))
+            total_price += dish['price'] * qty
+
+        # 床旁配送：自动生成配送单（出库→送达由配送端 marking）
+        if fulfillment_mode == 'bed_delivery' and ward_id:
+            cursor.execute('INSERT INTO deliveries (order_no, ward_id, status) VALUES (?, ?, "ready")',
+                          (order_no, ward_id))
+
+        conn.commit()
+        mode_text = '床旁配送' if fulfillment_mode == 'bed_delivery' else '食堂自取'
+        return jsonify({
+            'success': True,
+            'message': f'✅ 下单成功（{mode_text}）',
+            'order_no': order_no,
+            'total_price': round(total_price, 2),
+            'fulfillment_mode': fulfillment_mode,
+            'pickup_code': pickup_code,
+            'take_time': f'{take_start}-{take_end}',
+        })
+    except Exception as e:
+        conn.execute('ROLLBACK')
+        return jsonify({'success': False, 'message': str(e)}), 400
+
+
+@v1.route('/orders', methods=['GET'])
+def list_user_orders_v1():
+    """查询用户订单（今日/历史），含履约模式、配送状态与每品营养；按 order_no 分组"""
+    user_id = request.args.get('user_id')
+    scope = request.args.get('scope', 'today')  # today | history
+    if not user_id:
+        return jsonify({'success': False, 'message': '缺少 user_id'}), 400
+    conn = get_db()
+    cursor = conn.cursor()
+    sql = """
+        SELECT o.order_no, o.dish_name, o.quantity, o.order_time, o.take_deadline,
+               o.status, o.pickup_code, o.total_price, o.remark, o.unit_price,
+               o.fulfillment_mode, o.ward_id, o.meal_slot, o.patient_id,
+               u.name AS user_name, w.dept, w.floor, w.bed_no, w.bed_qr_token,
+               d.status AS delivery_status, d.id AS delivery_id,
+               ds.nutrition_info
+        FROM orders o
+        JOIN users u ON o.user_id = u.user_id
+        LEFT JOIN wards w ON o.ward_id = w.id
+        LEFT JOIN deliveries d ON d.order_no = o.order_no
+        LEFT JOIN dishes ds ON ds.name = o.dish_name
+    """
+    params = []
+    if scope == 'today':
+        sql += " WHERE o.user_id = ? AND DATE(o.order_time) = DATE('now','localtime')"
+        params.append(user_id)
+    else:
+        sql += ' WHERE o.user_id = ?'
+        params.append(user_id)
+        start = request.args.get('start_date')
+        end = request.args.get('end_date')
+        if start:
+            sql += ' AND DATE(o.order_time) >= ?'
+            params.append(start)
+        if end:
+            sql += ' AND DATE(o.order_time) <= ?'
+            params.append(end)
+    sql += ' ORDER BY o.order_time DESC'
+    cursor.execute(sql, params)
+    grouped = {}
+    for row in cursor.fetchall():
+        no = row['order_no']
+        if no not in grouped:
+            grouped[no] = {
+                'order_no': no, 'order_time': row['order_time'],
+                'take_deadline': row['take_deadline'], 'status': row['status'],
+                'pickup_code': row['pickup_code'],
+                'fulfillment_mode': row['fulfillment_mode'] or 'pickup',
+                'ward_id': row['ward_id'], 'meal_slot': row['meal_slot'],
+                'patient_id': row['patient_id'], 'remark': row['remark'],
+                'total_price': 0, 'user_name': row['user_name'],
+                'dept': row['dept'], 'floor': row['floor'], 'bed_no': row['bed_no'],
+                'bed_qr_token': row['bed_qr_token'],
+                'delivery_status': row['delivery_status'], 'delivery_id': row['delivery_id'],
+                'items': [],
+            }
+        nutri = {}
+        try:
+            nutri = json.loads(row['nutrition_info'] or '{}')
+        except Exception:
+            pass
+        grouped[no]['items'].append({
+            'dish_name': row['dish_name'], 'quantity': row['quantity'],
+            'unit_price': row['unit_price'], 'subtotal': row['total_price'],
+            'nutrition_info': nutri,
+        })
+        grouped[no]['total_price'] += row['total_price']
+    return jsonify({'success': True, 'data': list(grouped.values())})
+
+
+@v1.route('/nutrition/assess', methods=['GET'])
+def nutrition_assess():
+    """营养评估：NRS-2002 简化筛查 + Harris-Benedict 能量/蛋白目标"""
+    if not _HAS_SERVICES:
+        return jsonify({'success': False, 'message': '营养服务未加载'}), 500
+    patient_id = request.args.get('patient_id')
+    conn = get_db()
+    cursor = conn.cursor()
+    patient = None
+    if patient_id:
+        cursor.execute('SELECT * FROM patients WHERE id = ?', (patient_id,))
+        patient = cursor.fetchone()
+
+    sex = request.args.get('sex') or (patient['sex'] if patient else None)
+    weight = _num(request.args.get('weight_kg')) or (patient['weight_kg'] if patient else None)
+    height = _num(request.args.get('height_cm')) or (patient['height_cm'] if patient else None)
+    age = _num(request.args.get('age')) or (patient['age'] if patient else None)
+    stress = _num(request.args.get('stress')) or 1.2
+    case = request.args.get('case', 'normal')
+
+    energy = energy_target(sex, weight, height, age, stress) if (sex and weight and height and age) else None
+    protein = protein_target(weight, case) if weight else None
+
+    nrs = None
+    if request.args.get('nrs') == '1':
+        nrs = nrs2002_screen(
+            weight_loss_pct=_num(request.args.get('weight_loss_pct')),
+            bmi=_num(request.args.get('bmi')),
+            intake_days=request.args.get('intake_days', type=int),
+            severity=request.args.get('severity', 'mild'),
+            age=age,
+        )
+    return jsonify({
+        'success': True,
+        'patient_id': patient_id,
+        'energy_target': energy,
+        'protein_target': protein,
+        'nrs2002': ({'score': nrs[0], 'risk_level': nrs[1]} if nrs else None),
+    })
+
+
+@v1.route('/deliveries', methods=['GET'])
+def list_deliveries():
+    """配送端装车表/发餐表：按状态过滤"""
+    status = request.args.get('status')
+    conn = get_db()
+    cursor = conn.cursor()
+    q = '''SELECT d.id, d.order_no, d.ward_id, d.courier, d.status, d.delivered_at, d.created_at,
+                   w.dept, w.floor, w.bed_no, w.bed_qr_token
+            FROM deliveries d LEFT JOIN wards w ON d.ward_id = w.id'''
+    params = []
+    if status:
+        q += ' WHERE d.status = ?'
+        params.append(status)
+    q += ' ORDER BY d.id DESC'
+    cursor.execute(q, params)
+    rows = [{k: r[k] for k in r.keys()} for r in cursor.fetchall()]
+    return jsonify({'success': True, 'deliveries': rows})
+
+
+@v1.route('/deliveries/<int:did>/mark', methods=['POST'])
+def mark_delivery(did):
+    """配送员送达 marking：status ∈ {dispatching, delivered}"""
+    data = request.get_json(silent=True) or {}
+    status = data.get('status', 'delivered')
+    conn = get_db()
+    cursor = conn.cursor()
+    if status == 'delivered':
+        cursor.execute("UPDATE deliveries SET status = ?, delivered_at = datetime('now','localtime') WHERE id = ?", (status, did))
+    else:
+        cursor.execute('UPDATE deliveries SET status = ? WHERE id = ?', (status, did))
+    conn.commit()
+    return jsonify({'success': True, 'message': '配送状态已更新', 'status': status})
+
+
+@v1.route('/his/patient/<token>', methods=['GET'])
+def his_patient(token):
+    """HIS 适配 stub：按床头码返回患者档案 + 饮食医嘱说明"""
+    if not _HAS_SERVICES:
+        return jsonify({'success': False, 'message': 'HIS 适配未加载'}), 500
+    p = fetch_patient_by_bed_token(token)
+    if not p:
+        return jsonify({'success': False, 'message': f'未找到 {token} 的患者档案'}), 404
+    return jsonify({
+        'success': True,
+        'patient': p,
+        'diet_type_label': get_diet_label(p.get('diet_type', 'normal')),
+        'constraints': summarize_constraints(p.get('diet_type', 'normal')),
+    })
+
+
+app.register_blueprint(v1)
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+    _port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=_port, debug=False, use_reloader=False)

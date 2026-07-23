@@ -1,0 +1,31 @@
+/* ============================================================
+   暖食食堂 · 设计令牌（暖食市集）
+   暖米底 + 辣椒红/赤陶橙主色 + 鼠尾草绿(健康)
+   Fraunces 展示体 · Space Mono 取餐码
+   ============================================================ */
+:root {
+  /* 色板 */
+  --paper:      #FBF7F0;   /* 暖米背景 */
+  --paper-2:    #F4ECDF;
+  --card:        #FFFDF9;
+  --paprika:    #D8542B;   /* 辣椒红 / 主色 */
+  --paprika-deep:#B8431F;
+  --terra:       #E07A3E;   /* 赤陶橙 */
+  --sage:        #4F8A6A;   /* 鼠尾草绿 / 健康 */
+  --sage-soft:   #E4F0E8;
+  --ink:         #2B2420;   /* 暖近黑 */
+  --sub:         #7A6F66;
+  --line:        #ECE3D8;
+  --amber:       #E0912C;   /* 低库存警示 */
+  --danger:      #C0392B;   /* 售罄 */
+  --shadow:      0 6px 24px -12px rgba(43,36,32,.28);
+  --shadow-lg:   0 18px 48px -20px rgba(43,36,32,.42);
+
+  --r-sm: 10px; --r-md: 16px; --r-lg: 22px;
+  --ease: cubic-bezier(.22,1,.36,1);
+  --maxw: 720px;
+
+  --f-display: "Fraunces", "Songti SC", serif;
+  --f-mono: "Space Mono", ui-monospace, monospace;
+  --f-body: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
